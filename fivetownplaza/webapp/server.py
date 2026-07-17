@@ -538,13 +538,24 @@ class Handler(BaseHTTPRequestHandler):
             land_sqft = float(qs.get("land_sqft", ["0"])[0])
             building_sqft = float(qs.get("building_sqft", ["0"])[0])
             stories = qs.get("stories", [None])[0]
-            # Run both OSM lookups in PARALLEL (they're independent Overpass calls) so
-            # the worst case is ~1 lookup's time, not the sum of both.
-            with ThreadPoolExecutor(max_workers=2) as ex:
-                f_biz = ex.submit(businesses_at, apn, lat, lon, land_sqft)
-                f_site = ex.submit(site_at, apn, lat, lon, land_sqft, building_sqft, stories)
-                biz = f_biz.result()
-                site = f_site.result()
+            # Both OSM lookups run in PARALLEL under a HARD server-side deadline. On some
+            # hosts (a cloud datacenter IP) Overpass responds very slowly or hangs in a way
+            # its own socket timeout doesn't catch, which used to make this endpoint block
+            # for 60s+. We bound the whole thing to ~8s and shutdown(wait=False) so a hung
+            # OSM thread can never hold up the response; the frontend treats null as "no data".
+            ex = ThreadPoolExecutor(max_workers=2)
+            f_biz = ex.submit(businesses_at, apn, lat, lon, land_sqft)
+            f_site = ex.submit(site_at, apn, lat, lon, land_sqft, building_sqft, stories)
+            deadline = time.time() + 8.0
+
+            def _bounded(fut):
+                try:
+                    return fut.result(timeout=max(0.1, deadline - time.time()))
+                except Exception:
+                    return None
+            biz = _bounded(f_biz)
+            site = _bounded(f_site)
+            ex.shutdown(wait=False)
             self._send(200, json.dumps({"businesses": biz, "site": site}))
         elif u.path == "/api/research":
             # Kick off (or return cached) deep web research for an address. Slow, so this
