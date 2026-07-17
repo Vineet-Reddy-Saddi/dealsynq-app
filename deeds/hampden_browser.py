@@ -77,7 +77,13 @@ def _browser_get(url, timeout=60000, settle_ms=4000):
     asyncio loop)."""
     from playwright.sync_api import sync_playwright
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True)
+        # --no-sandbox: required to run Chromium as root inside a container.
+        # --disable-dev-shm-usage / --single-process / --disable-gpu: keep memory low so it
+        # survives a small (512MB) cloud instance. These are harmless locally too.
+        browser = pw.chromium.launch(headless=True, args=[
+            "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage",
+            "--disable-gpu", "--single-process", "--no-zygote",
+        ])
         try:
             ctx = browser.new_context(user_agent=UA)
             page = ctx.new_page()
