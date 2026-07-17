@@ -1,0 +1,5 @@
+# DealSynq web app — runtime dependencies.
+# The app and its Springfield modules are otherwise pure standard library; only the
+# web-research crawler needs these two.
+requests>=2.31
+urllib3>=2.0

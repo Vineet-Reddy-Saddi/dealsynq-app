@@ -1,0 +1,25 @@
+# DealSynq — Property Intelligence web app  ·  Render Blueprint
+# ---------------------------------------------------------------------------
+# Render's Blueprint auto-detect looks for render.yaml at the REPO ROOT. To use this
+# file as a Blueprint, copy it to the repo root; otherwise just create the service by
+# hand in the dashboard using the same build/start commands below (see deploy/DEPLOY.md).
+#
+# Render injects $PORT automatically; server.py reads it. HOST=0.0.0.0 makes the process
+# reachable from outside the container (locally it defaults to 127.0.0.1).
+services:
+  - type: web
+    name: dealsynq-property-intel
+    runtime: python
+    plan: free
+    buildCommand: pip install -r deploy/requirements.txt
+    startCommand: python fivetownplaza/webapp/server.py
+    envVars:
+      - key: HOST
+        value: "0.0.0.0"
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      # Proxy pool for the web-research crawler. Paste the JSON contents of
+      # axisgis/proxy_config.json here as a SECRET (Dashboard → Environment). Leave unset
+      # to run research directly (works, but the datacenter IP may be rate-limited).
+      - key: DEALSYNQ_PROXY_CONFIG
+        sync: false

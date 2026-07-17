@@ -1,0 +1,1081 @@
+{
+  "property_name": "Five Town Plaza",
+  "also_known_as": "Five Town Station (legal entity name)",
+  "profile_version": 4,
+  "profile_assembled_at": "2026-07-12T21:30:07",
+  "property_type": "retail",
+  "property_subtype": "shopping_center (neighborhood/community center)",
+  "use_classification": "Class 323: Shopping Centers (official MA assessor use code) -- corroborates property_type=retail/shopping_center classification.",
+  "anchor_address": "380 Cooley St, Springfield, MA 01128",
+  "resolution_method": "owner-entity aggregation (grouped all parcels owned by the legal entity, from street address anchor)",
+  "parcels": {
+    "count": 9,
+    "total_land_sqft": 1295977.0,
+    "total_land_acres": 29.75,
+    "total_land_assessed_value": 36816700.0,
+    "streets_spanned": [
+      "ALLEN ST",
+      "COOLEY ST"
+    ],
+    "detail": [
+      {
+        "apn": "031700053",
+        "situs_address": "380 COOLEY ST",
+        "land_sqft": 859830.0,
+        "land_assessed_value": 30059300.0,
+        "building_sqft_govt_source": 311873,
+        "zone": "Split",
+        "year_built": null
+      },
+      {
+        "apn": "031700032",
+        "situs_address": "270 COOLEY ST",
+        "land_sqft": 22105.0,
+        "land_assessed_value": 1710000.0,
+        "building_sqft_govt_source": 8800,
+        "zone": "Split",
+        "year_built": "1973"
+      },
+      {
+        "apn": "002800775",
+        "situs_address": "1761 ALLEN ST",
+        "land_sqft": 273687.0,
+        "land_assessed_value": 1434200.0,
+        "building_sqft_govt_source": 1984,
+        "zone": "Business A",
+        "year_built": null
+      },
+      {
+        "apn": "031700035",
+        "situs_address": "296 COOLEY ST",
+        "land_sqft": 29013.0,
+        "land_assessed_value": 905500.0,
+        "building_sqft_govt_source": 4656,
+        "zone": "Split",
+        "year_built": ""
+      },
+      {
+        "apn": "031700082",
+        "situs_address": "400 COOLEY ST",
+        "land_sqft": 21344.0,
+        "land_assessed_value": 655900.0,
+        "building_sqft_govt_source": 1760,
+        "zone": "Split",
+        "year_built": ""
+      },
+      {
+        "apn": "002800760",
+        "situs_address": "1785 ALLEN ST",
+        "land_sqft": 7714.0,
+        "land_assessed_value": 653700.0,
+        "building_sqft_govt_source": 4900,
+        "zone": "Business A",
+        "year_built": "1972"
+      },
+      {
+        "apn": "031700086",
+        "situs_address": "416 COOLEY ST",
+        "land_sqft": 21344.0,
+        "land_assessed_value": 567200.0,
+        "building_sqft_govt_source": 2232,
+        "zone": "Split",
+        "year_built": ""
+      },
+      {
+        "apn": "031700040",
+        "situs_address": "REAR  COOLEY ST",
+        "land_sqft": 39596.0,
+        "land_assessed_value": 508900.0,
+        "building_sqft_govt_source": 0,
+        "zone": "Business A",
+        "year_built": ""
+      },
+      {
+        "apn": "031700084",
+        "situs_address": "W S  COOLEY ST",
+        "land_sqft": 21344.0,
+        "land_assessed_value": 322000.0,
+        "building_sqft_govt_source": 0,
+        "zone": "Split",
+        "year_built": ""
+      }
+    ]
+  },
+  "building": {
+    "total_building_sqft": {
+      "value": 336205,
+      "method": "sum of Springfield assessor record-card Interior/Exterior area tables, all 9 parcels, all building cards, LAND-type cards excluded",
+      "fact_type": "direct",
+      "source_system": "Springfield Assessor commercial property record cards",
+      "value_confidence": 0.95
+    },
+    "cross_checks": [
+      {
+        "source": "PECO official leasing flyer",
+        "value": 327303,
+        "variance_pct": -2.7
+      },
+      {
+        "source": "LoopNet marketing PDF",
+        "value": 328372,
+        "variance_pct": -2.4
+      }
+    ],
+    "verdict": "Building size confirmed by 3 independent sources (1 government, 2 private marketing) within normal measurement-convention tolerance.",
+    "buildings_on_main_parcel": 7,
+    "year_built_range": "1970 (original core) - 2004 (newest outparcel)",
+    "per_building_detail": [
+      {
+        "card": 1,
+        "structure_type": "COMM SHOPPING CENTER",
+        "grade": "B",
+        "sqft": 188952,
+        "features": [
+          "CANOPY ROOF/SLAB x3",
+          "LOAD DOCK,ST OR CONC x3",
+          "OVERHEAD DR-WOOD/MTL",
+          "SPRINKLER SYS WET"
+        ]
+      },
+      {
+        "card": 2,
+        "structure_type": "SUPERMARKET (Big Y)",
+        "grade": "A",
+        "sqft": 68660,
+        "features": [
+          "CANOPY ROOF/SLAB",
+          "ENCLOSED ENTRY x2",
+          "OVERHEAD DR-WOOD/MTL",
+          "ELEVATOR ELECTRIC PASNGR",
+          "SPRINKLER SYS WET"
+        ]
+      },
+      {
+        "card": 3,
+        "structure_type": "COMM SHOPPING CENTER",
+        "grade": "B",
+        "sqft": 25280,
+        "features": [
+          "CANOPY ROOF/SLAB",
+          "SPRINKLER SYS WET",
+          "OVERHEAD DR-WOOD/MTL"
+        ]
+      },
+      {
+        "card": 4,
+        "structure_type": "COMM SHOPPING CENTER",
+        "grade": "B",
+        "sqft": 14720,
+        "features": [
+          "CANOPY ONLY"
+        ]
+      },
+      {
+        "card": 5,
+        "structure_type": "RESTAURANT-FRAN",
+        "grade": "A",
+        "sqft": 7368,
+        "features": [
+          "ENCLOSED ENTRY",
+          "SPRINKLER SYS WET"
+        ]
+      },
+      {
+        "card": 7,
+        "structure_type": "RESTAURANT-FRAN",
+        "grade": "A",
+        "sqft": 6893,
+        "features": [
+          "ENCLOSED ENTRY",
+          "CANOPY ONLY"
+        ]
+      },
+      {
+        "apn": "031700032",
+        "situs": "270 Cooley St",
+        "structure_type": "RETAIL MULTI OCCUP",
+        "grade": "B+",
+        "sqft": 8800,
+        "features": [
+          "CANOPY ONLY"
+        ]
+      },
+      {
+        "apn": "031700035",
+        "situs": "296 Cooley St",
+        "structure_type": "RETAIL MULTI OCCUP",
+        "grade": "B",
+        "sqft": 4656,
+        "features": [
+          "BANK CANOPY-DRIVE IN",
+          "BANK PNEUMATIC TUBE",
+          "STORE FRONT/AV MET F",
+          "ENCLOSED ENTRY",
+          "CANOPY ONLY x2"
+        ]
+      }
+    ],
+    "source_note": "Grade/features from Springfield assessor record cards, main parcel (7 buildings, 93% of total sqft) + 2 outparcels; remaining small outparcels (400/416/REAR/W S Cooley, 1761/1785 Allen) not individually re-pulled for feature detail -- minor pads, low incremental value.",
+    "elevator_count": 1,
+    "sprinklered_buildings": 4,
+    "building_to_land_ratio_pct": 25.9
+  },
+  "zoning": {
+    "code": "SR1C1",
+    "coarse_code_from_gis_export": "Split / Business A",
+    "source": "Springfield Assessor record card"
+  },
+  "ownership": {
+    "current_owner": {
+      "name": "Five Town Station LLC",
+      "jurisdiction": "Delaware",
+      "mailing_address": "11501 Northlake Dr, Cincinnati, OH 45249"
+    },
+    "parent_chain": {
+      "property_owning_entity": {
+        "name": "Five Town Station LLC",
+        "jurisdiction": "Delaware"
+      },
+      "parent": {
+        "name": "Phillips Edison Grocery Center REIT I, Inc.",
+        "jurisdiction": "Maryland",
+        "note": "later renamed/became Phillips Edison & Company, Inc., NASDAQ: PECO"
+      },
+      "source": "SEC Exhibit 21.1 (Subsidiaries of the Registrant), filed with Phillips Edison Grocery Center REIT I FY2014 Form 10-K",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1476204/000147620415000003/pentr-20141231xex211.htm",
+      "fact_type": "direct",
+      "value_confidence": 1.0,
+      "match_confidence": 1.0,
+      "retrieved_at": "2026-07-12T20:19:23",
+      "effective_date": "FY2014 10-K (filed 2015)",
+      "note": "Entity naming pattern \"[Property Name] Station LLC\" appears ~150+ times in this same exhibit -- confirmed as PECO's standard one-subsidiary-per-property holding structure, not a one-off."
+    },
+    "note": "Formally confirmed via SEC Exhibit 21.1, not inferred from mailing address alone.",
+    "leasing_broker_contacts": [
+      {
+        "name": "Scott Faloni",
+        "phone": "(410) 693-3248",
+        "email": "sfaloni@phillipsedison.com"
+      },
+      {
+        "name": "Brogan Burns",
+        "phone": "(513) 344-0989",
+        "email": "bburns@phillipsedison.com"
+      }
+    ],
+    "property_manager": "Phillips Edison & Company (self-managed, per PECO's own property page)"
+  },
+  "transaction_history": [
+    {
+      "date": "2014-09-29",
+      "price": 31007400,
+      "buyer": "Five Town Station LLC (Phillips Edison)",
+      "seller": "Urstadt Biddle Properties Inc.",
+      "deed_ref": "20442/561",
+      "deed_type": "SALE OF MULTIPLE PARCELS",
+      "structure": "All-cash; part of Urstadt Biddle's tax-deferred reverse 1031 exchange (down-leg: 2 Greenwich CT properties, $47.4M)",
+      "confirmed_by": [
+        "Hampden County Registry of Deeds",
+        "Springfield Assessor record card",
+        "Urstadt Biddle SEC Form 8-K (seller)"
+      ],
+      "confidence": "verified (3 independent sources)"
+    },
+    {
+      "date": "1970-02-18",
+      "price": 950000,
+      "buyer": "Hubbard Real Estate Investments",
+      "deed_ref": "3490/524",
+      "note": "Matches Urstadt Biddle's own account of owning the property 'since the early 1970s' -- Hubbard likely a predecessor/merged name, not verified as identical entity.",
+      "confidence": "direct (assessor record), relationship to Urstadt Biddle inferred"
+    }
+  ],
+  "financing": {
+    "recorded_mortgage": null,
+    "finding": "No mortgage recorded against the parcel (confirmed via Hampden registry, cross-validated against a working scraper).",
+    "explanation": "Seller (Urstadt Biddle) SEC press release states the sale was \"an all cash price\" and that proceeds were used to repay Urstadt Biddle's own UNSECURED revolving credit facility -- consistent with no property-specific mortgage being recorded. Likely explanation: Phillips Edison financed the acquisition at the corporate/OP level (common for grocery-anchored shopping center REITs) rather than via a property-secured loan, which is why Hampden County shows no MTG document.",
+    "explanation_confidence": "estimated/inferred (fact_type=inferred) -- we did not find a PECO-side filing that explicitly states their financing method for this specific acquisition, only that it is consistent with the absence of a recorded mortgage.",
+    "related_ucc_filing": {
+      "date": "2017-08-08",
+      "type": "Financing Statement (UCC)",
+      "counterparty": "United Bank",
+      "book_page": "21802-374"
+    },
+    "foreclosure_bankruptcy_check": {
+      "direct_court_search": "NOT PERFORMED -- PACER (federal bankruptcy court) requires a paid account; not attempted.",
+      "indirect_evidence": "Our full Hampden County deeds pull (all document types, all years, all parties) returned no foreclosure-related instrument (Notice of Sale, Certificate of Entry, etc.) under this entity name. A real foreclosure event would very likely leave a recorded trace at the county level even before/alongside any federal bankruptcy filing.",
+      "verdict": "No evidence of foreclosure. Bankruptcy genuinely unchecked (would need PACER).",
+      "confidence": "inferred, not verified"
+    }
+  },
+  "other_recorded_documents": [
+    {
+      "party_name": "FIVE TOWN STATION LLC",
+      "party_role": "grantor",
+      "reverse_party": "SPRINGFIELD CITY",
+      "town": "Springfield",
+      "date_received": "01-06-2017",
+      "document_type": "Decision",
+      "document_desc": "COOLEY ST",
+      "book_page": "21523-581",
+      "fact_type": "direct",
+      "source_system": "Hampden County Registry of Deeds (search.hampdendeeds.com)",
+      "source_url": "https://search.hampdendeeds.com/ALIS/WW400R.HTM?W9SNM=FIVE+TOWN+STATION+LLC&W9GNM=&W9IXTP=A&W9ABR=%2AALL&W9INQ=AY&AYVAL=1948&CYVAL=2020&W9FDTA=&W9TDTA=&WSHTNM=WW401R00&WSIQTP=LR01LP&WSKYCD=N&WSWVER=2",
+      "retrieved_at": "2026-07-11T13:55:42",
+      "effective_date": "01-06-2017",
+      "value_confidence": 1.0,
+      "match_confidence": 1.0
+    },
+    {
+      "party_name": "FIVE TOWN STATION LLC",
+      "party_role": "grantor",
+      "reverse_party": null,
+      "town": "Hampden County",
+      "date_received": "10-05-2017",
+      "document_type": "Certificate",
+      "document_desc": "SEE RECORD",
+      "book_page": "21890-167",
+      "fact_type": "direct",
+      "source_system": "Hampden County Registry of Deeds (search.hampdendeeds.com)",
+      "source_url": "https://search.hampdendeeds.com/ALIS/WW400R.HTM?W9SNM=FIVE+TOWN+STATION+LLC&W9GNM=&W9IXTP=A&W9ABR=%2AALL&W9INQ=AY&AYVAL=1948&CYVAL=2020&W9FDTA=&W9TDTA=&WSHTNM=WW401R00&WSIQTP=LR01LP&WSKYCD=N&WSWVER=2",
+      "retrieved_at": "2026-07-11T13:55:42",
+      "effective_date": "10-05-2017",
+      "value_confidence": 1.0,
+      "match_confidence": 1.0
+    },
+    {
+      "party_name": "FIVE TOWN STATION LLC",
+      "party_role": "grantor",
+      "reverse_party": "WESTERN MASSACHUS (&O)",
+      "town": "Springfield",
+      "date_received": "10-05-2017",
+      "document_type": "Easement",
+      "document_desc": "COOLEY ST",
+      "book_page": "21890-168",
+      "fact_type": "direct",
+      "source_system": "Hampden County Registry of Deeds (search.hampdendeeds.com)",
+      "source_url": "https://search.hampdendeeds.com/ALIS/WW400R.HTM?W9SNM=FIVE+TOWN+STATION+LLC&W9GNM=&W9IXTP=A&W9ABR=%2AALL&W9INQ=AY&AYVAL=1948&CYVAL=2020&W9FDTA=&W9TDTA=&WSHTNM=WW401R00&WSIQTP=LR01LP&WSKYCD=N&WSWVER=2",
+      "retrieved_at": "2026-07-11T13:55:42",
+      "effective_date": "10-05-2017",
+      "value_confidence": 1.0,
+      "match_confidence": 1.0
+    },
+    {
+      "party_name": "FIVE TOWN STATION LLC",
+      "party_role": "grantor",
+      "reverse_party": "OLLIES BARGAIN OUTLET",
+      "town": "Springfield",
+      "date_received": "11-19-2025",
+      "document_type": "Lease",
+      "document_desc": "COOLEY ST",
+      "book_page": "26117-468",
+      "fact_type": "direct",
+      "source_system": "Hampden County Registry of Deeds (search.hampdendeeds.com)",
+      "source_url": "https://search.hampdendeeds.com/ALIS/WW400R.HTM?W9SNM=FIVE+TOWN+STATION+LLC&W9GNM=&W9IXTP=A&W9ABR=%2AALL&W9INQ=AY&AYVAL=1948&CYVAL=2020&W9FDTA=&W9TDTA=&WSHTNM=WW401R00&WSIQTP=LR01LP&WSKYCD=N&WSWVER=2",
+      "retrieved_at": "2026-07-11T13:55:42",
+      "effective_date": "11-19-2025",
+      "value_confidence": 1.0,
+      "match_confidence": 1.0
+    }
+  ],
+  "tenants": {
+    "space_count": 35,
+    "occupied_count": 34,
+    "available_count": 1,
+    "occupancy_rate_by_sqft": 99.4,
+    "anchor_tenants": [
+      "Big Y (grocery, 64,863 sqft)",
+      "Burlington (82,500 sqft)",
+      "Ollie's Bargain Outlet (35,100 sqft)",
+      "Best Fitness (33,000 sqft)"
+    ],
+    "roster": [
+      {
+        "space_id": "01",
+        "tenant_name": "Big Y",
+        "sqft": 64863,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": false,
+        "note": "privately/family-owned regional grocer"
+      },
+      {
+        "space_id": "05",
+        "tenant_name": "Peacock Chinese Restaurant",
+        "sqft": 3200,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "07",
+        "tenant_name": "T & T Nail Bar and Spa",
+        "sqft": 2000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "08",
+        "tenant_name": "The Platinum Puff",
+        "sqft": 2000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "09",
+        "tenant_name": "SNIPES",
+        "sqft": 8000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "10",
+        "tenant_name": "ATI Physical Therapy",
+        "sqft": 3350,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "12",
+        "tenant_name": "H&R Block",
+        "sqft": 2000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NYSE:HRB"
+      },
+      {
+        "space_id": "13",
+        "tenant_name": "Riverside Dental",
+        "sqft": 2000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "14",
+        "tenant_name": "AVAILABLE",
+        "sqft": 1815,
+        "status": "available",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "15",
+        "tenant_name": "Pet Supplies Plus",
+        "sqft": 7318,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "17",
+        "tenant_name": "JB Salon Suites",
+        "sqft": 2700,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "17A",
+        "tenant_name": "The Fresh Monkee",
+        "sqft": 1515,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "18",
+        "tenant_name": "Christopher's Sports Tavern",
+        "sqft": 5200,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "21",
+        "tenant_name": "Zombie Hideout",
+        "sqft": 9000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "21A",
+        "tenant_name": "Sunrun",
+        "sqft": 4788,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NASDAQ:RUN"
+      },
+      {
+        "space_id": "22",
+        "tenant_name": "Small Smiles Dental Clinic of Springfield",
+        "sqft": 3120,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "23",
+        "tenant_name": "V Nails & Spa",
+        "sqft": 978,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "24",
+        "tenant_name": "The Threading Club & Spa",
+        "sqft": 978,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "25",
+        "tenant_name": "Code Ninjas",
+        "sqft": 1553,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "25A",
+        "tenant_name": "The Barbers Loft",
+        "sqft": 1235,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "26",
+        "tenant_name": "Subway",
+        "sqft": 900,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "27",
+        "tenant_name": "Small Smiles Dental Clinic of Springfield",
+        "sqft": 8524,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "28",
+        "tenant_name": "Burlington",
+        "sqft": 82500,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NYSE:BURL"
+      },
+      {
+        "space_id": "28A",
+        "tenant_name": "Best Fitness",
+        "sqft": 33000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "30",
+        "tenant_name": "Ollie's Bargain Outlet",
+        "sqft": 35100,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NASDAQ:OLLI"
+      },
+      {
+        "space_id": "31",
+        "tenant_name": "Springfield Liquor Mart",
+        "sqft": 4970,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "40",
+        "tenant_name": "UrgentVet",
+        "sqft": 3000,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "43",
+        "tenant_name": "IHOP",
+        "sqft": 4600,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NYSE:DIN",
+        "note": "parent is Dine Brands Global"
+      },
+      {
+        "space_id": "60",
+        "tenant_name": "Freedom Credit Union",
+        "sqft": 2400,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "62",
+        "tenant_name": "HOTWORX",
+        "sqft": 2650,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "63",
+        "tenant_name": "O'Reilly Auto Parts",
+        "sqft": 7500,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NASDAQ:ORLY"
+      },
+      {
+        "space_id": "OUT1",
+        "tenant_name": "Burger King",
+        "sqft": 2808,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "OUT2",
+        "tenant_name": "Auto Laser Car Wash",
+        "sqft": 2300,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0
+      },
+      {
+        "space_id": "OUT3",
+        "tenant_name": "Texas Roadhouse",
+        "sqft": 7388,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": true,
+        "ticker": "NASDAQ:TXRH"
+      },
+      {
+        "space_id": "OUT4",
+        "tenant_name": "Dunkin'",
+        "sqft": 2050,
+        "status": "occupied",
+        "fact_type": "direct",
+        "source_system": "Phillips Edison & Company (PECO) \u2014 official leasing flyer, property owner/manager",
+        "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+        "retrieved_at": "2026-07-11T14:00:21",
+        "effective_date": "unknown (no date printed on flyer; treat as current-as-marketed)",
+        "value_confidence": 0.9,
+        "match_confidence": 1.0,
+        "public_company_flag": false,
+        "note": "formerly public (NASDAQ:DNKN), taken private by Inspire Brands in 2020"
+      }
+    ],
+    "cross_validation": {
+      "note": "Ollies Bargain Outlet (space 30, 35,100 sqft) independently confirmed by TWO unrelated sources: this PECO leasing flyer AND a recorded Lease document at Hampden County Registry of Deeds dated 2025-11-19 (book/page 26117-468). Two independent authoritative sources agreeing = VERIFIED confidence tier per spec section 23.",
+      "registry_lease_date": "2025-11-19",
+      "registry_book_page": "26117-468"
+    },
+    "source_confidence_note": "fact_type=direct + value_confidence=0.9 (not 1.0) because this is the landlord/property-manager marketing collateral, not a government record -- slightly lower confidence than the assessor/registry sources, consistent with spec confidence rules (Strong, not Verified, unless cross-confirmed -- Ollies IS cross-confirmed, see cross_validation).",
+    "historical_anchor_lineage": {
+      "supermarket_anchor": [
+        "Mott's ShopRite",
+        "A&P",
+        "Big Y (current)"
+      ],
+      "discount_department_store_anchor": [
+        "W.T. Grant",
+        "Caldor's",
+        "Spag's",
+        "Burlington Coat Factory (current)"
+      ]
+    }
+  },
+  "permits": {
+    "source": "Springfield Assessor record card, Permit Information section (main parcel only so far)",
+    "count": "25+ permits, 2010-2025",
+    "notable": [
+      "2023 DEMO-00015 demolition permit $137,000",
+      "2023 OT-00147AL alteration $600,000",
+      "2021 remodel $763,111",
+      "2025 OTH-25-139 $50,000"
+    ],
+    "note": "This directly satisfies spec section 13 (Permit/Inspection/Code data) for the main parcel -- real permit_type/date/value records, not inferred."
+  },
+  "data_quality_log": [
+    {
+      "issue": "year_built field polluted with raw HTML link in original Springfield assessor CSV export",
+      "resolution": "Fetched actual record cards; got real year_built per building (1970-2004) instead of the broken field."
+    },
+    {
+      "issue": "Naive building-sqft sum initially overcounted by 22% (65,340 sqft)",
+      "resolution": "One 'card' on 1761 Allen St had Structure Type=LAND, not a building -- excluded after checking field semantics, not just summing numbers."
+    },
+    {
+      "issue": "Hampden Registry of Deeds and MA Secretary of State portals rate-limited/blocked further automated queries",
+      "resolution": "Backed off rather than force; pivoted to SEC EDGAR (a better, unblocked, MORE authoritative source given the owner is a public REIT)."
+    }
+  ],
+  "confidence_summary": {
+    "verified_tier": [
+      "2014 sale price and date",
+      "owning entity + parent REIT chain",
+      "building sqft (3-source triangulation)"
+    ],
+    "strong_tier": [
+      "tenant roster (owner's own flyer, cross-confirmed on Ollie's specifically)",
+      "permit history",
+      "zoning/use classification",
+      "demographics (owner-published)",
+      "flood risk (FEMA zone X, all 9 parcels)",
+      "building grade/features (per-building record card detail)",
+      "EPA environmental check (federal, clean result)",
+      "location context (neighborhood, census geography \u2014 on-disk)",
+      "traffic counts (owner site plan)"
+    ],
+    "estimated_tier": [
+      "explanation for absence of a recorded mortgage",
+      "1970 Hubbard->Urstadt Biddle entity continuity",
+      "annual tax bill (assessed value x public FY2026 rate)"
+    ],
+    "unresolved": [
+      "individual tenant lease effective-dates (flyer is undated)",
+      "whether other tenants besides Ollie's have registry-recorded leases",
+      "state-level environmental records (MassDEP, JS-app blocked)",
+      "code violations (requires portal login)",
+      "bankruptcy check (requires PACER account)",
+      "direct market comparables (needs paid CRE data source)"
+    ]
+  },
+  "sources_used": [
+    "Springfield Assessor (ArcGIS ownportal CSV, already in DealSynq outputs/)",
+    "Springfield Assessor commercial property record cards (assessors-search/assessors.php)",
+    "Hampden County Registry of Deeds (search.hampdendeeds.com, ALIS platform)",
+    "Phillips Edison & Company official leasing flyer",
+    "SEC EDGAR (Phillips Edison Grocery Center REIT I 10-K Exhibit 21.1; Urstadt Biddle Properties Form 8-K)"
+  ],
+  "coordinates": {
+    "lat": 42.094472,
+    "lon": -72.501118,
+    "source_system": "Phillips Edison & Company official leasing flyer, page 1",
+    "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+    "fact_type": "direct",
+    "value_confidence": 0.95,
+    "retrieved_at": "2026-07-12T20:42:38"
+  },
+  "demographics": {
+    "3_mile_radius": {
+      "population": 77048,
+      "median_hhi": 83753,
+      "households": 28524
+    },
+    "5_mile_radius": {
+      "population": 191914,
+      "median_hhi": 71346,
+      "households": 72506
+    },
+    "source_system": "Phillips Edison & Company official leasing flyer, page 1",
+    "source_url": "https://www.phillipsedison.com/sites/default/files/property/documents/Five%20Town%20Plaza%20-%20Flyer.pdf",
+    "fact_type": "direct",
+    "value_confidence": 0.85,
+    "note": "Owner-published radius demographics, not an independent Census pull -- Strong tier, not Verified. A general 'demographics by lat/lon' step (Census API) would be the reusable version of this for properties whose owner doesn't publish a flyer.",
+    "retrieved_at": "2026-07-12T20:42:38"
+  },
+  "hazard": {
+    "flood_zone": "X",
+    "flood_zone_meaning": "Area of minimal flood hazard (outside the 500-year floodplain) per FEMA",
+    "consistent_across_all_9_parcels": true,
+    "flood_panel": "varies by parcel (25013C0407E / 0409E / 0430E)",
+    "flood_map_date": "2013-07-16",
+    "source_system": "Springfield Assessor CSV (FEMA flood-zone fields, already present in the statewide scrape -- outputs/springfield_ownportal.csv)",
+    "fact_type": "direct",
+    "value_confidence": 0.9,
+    "retrieved_at": "2026-07-12T20:42:38",
+    "note": "This field already existed in data collected months ago for the whole MA pipeline; it just hadn't been pulled into a property profile before now."
+  },
+  "derived_metrics": {
+    "price_per_square_foot": {
+      "value": 92.23,
+      "calculation": "$31,007,400 sale price / 336,205 building sqft",
+      "fact_type": "derived",
+      "value_confidence": 0.9,
+      "note": "Uses the 2014 acquisition price against current building sqft -- a historical-cost yardstick, not a current market-value-per-sqft (no current appraisal/BOV exists)."
+    },
+    "hold_period_years": {
+      "value": 11.8,
+      "fact_type": "derived",
+      "note": "Years since acquisition by current owner (Five Town Station LLC)."
+    }
+  },
+  "environmental": {
+    "epa_regulated_facility_check": {
+      "method": "EPA ECHO facility-search REST API, queried all 42 EPA-regulated facilities in ZIP 01118",
+      "result": "No facility registered at any of the 9 parcel addresses (380/270/296/400/416/REAR/W S Cooley St, 1761/1785 Allen St)",
+      "verdict": "No EPA-regulated environmental facility on-site",
+      "fact_type": "direct",
+      "value_confidence": 0.95,
+      "source_url": "https://echodata.epa.gov/echo/echo_rest_services.get_facilities",
+      "retrieved_at": "2026-07-12T21:09:48"
+    },
+    "massdep_state_level_check": {
+      "status": "BLOCKED -- eeaonline.eea.state.ma.us waste-site portal is a JS-rendered Angular SPA, not scrapeable via plain HTTP. Would need browser automation to check state-level records (spills, USTs) not covered by the federal EPA check."
+    },
+    "note": "The car wash structure on one outparcel (416 Cooley St) is the one use-type on this property that would typically carry UST/wastewater considerations -- federal check is clean; state-level check unresolved."
+  },
+  "code_and_planning": {
+    "code_violations_check": {
+      "status": "BLOCKED -- Springfield's code-enforcement portal (citizen.springfieldma.intelligovsoftware.com) requires an account login to search cases; no public read-only lookup found."
+    },
+    "planning_applications": {
+      "status": "PARTIAL -- no searchable online case database found for Springfield Planning Board (meeting minutes only, not machine-readable). However, a 'Decision' document IS already on record from our deeds pull: 2017-01-06, grantor=Five Town Station LLC, counterparty=Springfield City, book/page 21523-581 -- very likely a planning/zoning decision, already captured, not re-verified against a case file."
+    }
+  },
+  "market_context": {
+    "springfield_avg_cap_rate_pct": 8.05,
+    "national_large_retail_center_cap_rate_pct": 6.55,
+    "national_avg_asking_rent_psf": 25.48,
+    "note": "Springfield trades at a wider (higher) cap rate than the national average -- consistent with a secondary-market classification, not a property-specific red flag. No direct comparable-sale set was gathered (would need a paid CRE data source e.g. CoStar/CBRE).",
+    "source": "Web market research, 2026",
+    "fact_type": "estimated",
+    "value_confidence": 0.6,
+    "traffic_counts": {
+      "Bicentennial Highway": "40,000 vehicles/day",
+      "Cooley Street": "10,000 vehicles/day",
+      "Allen Street": "5,000 vehicles/day",
+      "source": "PECO leasing flyer site plan (owner source)",
+      "fact_type": "direct",
+      "value_confidence": 0.8
+    }
+  },
+  "location_context": {
+    "neighborhood": "Sixteen Acres",
+    "census_tract": "8016.05",
+    "census_block": "3",
+    "city_sector": "I3",
+    "zip_code": "01118",
+    "historic_district": "No",
+    "overlay_district": "None",
+    "cdbg_zone": "No",
+    "source_system": "Springfield Assessor CSV (fields already collected in the statewide MA scrape)",
+    "fact_type": "direct",
+    "value_confidence": 0.9,
+    "retrieved_at": "2026-07-12T21:30:07",
+    "note": "All 9 parcels share the same neighborhood/tract/sector. Historic/overlay/CDBG are real negative findings (blank/N in the source)."
+  },
+  "geometry": {
+    "parcel_geometry_available": "Yes \u2014 GeoJSON polygon for all 9 parcels (source: Springfield Assessor ownportal, already on disk)",
+    "centroid_derivable": true,
+    "note": "Parcel outlines + centroids are in hand. Actual BUILDING footprint outlines (vs. parcel outlines) still require a computer-vision / footprint-dataset step (not free).",
+    "fact_type": "direct",
+    "value_confidence": 0.95,
+    "retrieved_at": "2026-07-12T21:30:07"
+  },
+  "tax": {
+    "total_assessed_value": 36816700.0,
+    "fy2026_commercial_tax_rate_per_1000": 34.35,
+    "estimated_annual_tax": 1264654,
+    "calculation": "$36,816,700 assessed / 1000 x $34.35 CIP rate",
+    "source": "Assessed value from Springfield Assessor; FY2026 CIP tax rate from MA DLS / City of Springfield",
+    "fact_type": "derived",
+    "value_confidence": 0.85,
+    "note": "Estimate: applies the citywide FY2026 commercial rate to total assessed value. Actual billed amount may differ slightly with exemptions/special assessments."
+  },
+  "remaining_free_gaps_deferred": [
+    "1-mile radius demographics (needs Census block-group radius aggregation; 3-mi & 5-mi captured)",
+    "Permit history for the 8 non-main parcels (same record-card source; main parcel = 93% of value, captured)"
+  ]
+}

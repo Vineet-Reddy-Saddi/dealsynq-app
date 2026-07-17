@@ -1,0 +1,135 @@
+{
+  "property_name": "Five Town Plaza",
+  "property_type": "retail",
+  "property_subtype": "shopping_center (neighborhood/community center)",
+  "resolution_method": "owner-entity aggregation (grouped all parcels owned by the legal entity, from street address anchor)",
+  "anchor_address": {
+    "value": "380 Cooley St, Springfield, MA",
+    "attribute": "anchor_address",
+    "fact_type": "direct",
+    "source_system": "Springfield Assessor (ArcGIS ownportal)",
+    "source_url": "https://www.springfield-ma.gov/finance/assessors",
+    "source_record_id": null,
+    "retrieved_at": "2026-07-11T13:39:38",
+    "effective_date": "FY2025",
+    "value_confidence": 0.95,
+    "match_confidence": 1.0
+  },
+  "owning_entity": {
+    "value": "FIVE TOWN STATION LLC",
+    "attribute": "owner_name",
+    "fact_type": "direct",
+    "source_system": "Springfield Assessor (ArcGIS ownportal)",
+    "source_url": "https://www.springfield-ma.gov/finance/assessors",
+    "source_record_id": null,
+    "retrieved_at": "2026-07-11T13:39:38",
+    "effective_date": "FY2025",
+    "value_confidence": 0.95,
+    "match_confidence": 1.0
+  },
+  "owner_mailing": {
+    "value": "11501 Northlake Dr, Cincinnati, OH 45249",
+    "attribute": "owner_mailing_address",
+    "fact_type": "direct",
+    "source_system": "Springfield Assessor (ArcGIS ownportal)",
+    "source_url": "https://www.springfield-ma.gov/finance/assessors",
+    "source_record_id": null,
+    "retrieved_at": "2026-07-11T13:39:38",
+    "effective_date": "FY2025",
+    "value_confidence": 0.95,
+    "match_confidence": 1.0
+  },
+  "parcel_count": 9,
+  "total_assessed_value": 36816700.0,
+  "total_land_sqft": 1295977.0,
+  "total_land_acres": 29.75,
+  "streets_spanned": [
+    "ALLEN ST",
+    "COOLEY ST"
+  ],
+  "parcels": [
+    {
+      "apn": "031700053",
+      "situs_address": "380 COOLEY ST",
+      "assessed_value": 30059300.0,
+      "land_sqft": 859830.0,
+      "zone": "Split",
+      "year_built": null,
+      "has_geometry": true
+    },
+    {
+      "apn": "031700032",
+      "situs_address": "270 COOLEY ST",
+      "assessed_value": 1710000.0,
+      "land_sqft": 22105.0,
+      "zone": "Split",
+      "year_built": "1973",
+      "has_geometry": true
+    },
+    {
+      "apn": "002800775",
+      "situs_address": "1761 ALLEN ST",
+      "assessed_value": 1434200.0,
+      "land_sqft": 273687.0,
+      "zone": "Business A",
+      "year_built": null,
+      "has_geometry": true
+    },
+    {
+      "apn": "031700035",
+      "situs_address": "296 COOLEY ST",
+      "assessed_value": 905500.0,
+      "land_sqft": 29013.0,
+      "zone": "Split",
+      "year_built": "",
+      "has_geometry": true
+    },
+    {
+      "apn": "031700082",
+      "situs_address": "400 COOLEY ST",
+      "assessed_value": 655900.0,
+      "land_sqft": 21344.0,
+      "zone": "Split",
+      "year_built": "",
+      "has_geometry": true
+    },
+    {
+      "apn": "002800760",
+      "situs_address": "1785 ALLEN ST",
+      "assessed_value": 653700.0,
+      "land_sqft": 7714.0,
+      "zone": "Business A",
+      "year_built": "1972",
+      "has_geometry": true
+    },
+    {
+      "apn": "031700086",
+      "situs_address": "416 COOLEY ST",
+      "assessed_value": 567200.0,
+      "land_sqft": 21344.0,
+      "zone": "Split",
+      "year_built": "",
+      "has_geometry": true
+    },
+    {
+      "apn": "031700040",
+      "situs_address": "REAR  COOLEY ST",
+      "assessed_value": 508900.0,
+      "land_sqft": 39596.0,
+      "zone": "Business A",
+      "year_built": "",
+      "has_geometry": true
+    },
+    {
+      "apn": "031700084",
+      "situs_address": "W S  COOLEY ST",
+      "assessed_value": 322000.0,
+      "land_sqft": 21344.0,
+      "zone": "Split",
+      "year_built": "",
+      "has_geometry": true
+    }
+  ],
+  "provenance_note": "Every field is an observation carrying source_system/source_url/retrieved_at/effective_date/confidence (spec sections 5 & 22).",
+  "_generated_at": "2026-07-11T13:39:38"
+}

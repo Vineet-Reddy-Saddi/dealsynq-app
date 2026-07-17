@@ -1,0 +1,83 @@
+{
+ "apn": "031700191",
+ "situs": "415 COOLEY ST",
+ "use_class": "324: Supermarkets Greater Than 10,000 Sf",
+ "zoning": "B1",
+ "total_acres": "7.8800",
+ "value_flag": "INCOME APPROACH",
+ "assessment": {
+  "land": 3239600,
+  "building": 4010800,
+  "total": 7250400
+ },
+ "building_count": 1,
+ "total_building_sqft": 67952,
+ "buildings": [
+  {
+   "card": 1,
+   "structure_type": "SUPERMARKET",
+   "grade": "B+",
+   "year_built": "2008",
+   "sqft": 67952,
+   "detail": {
+    "use_type": "SUPER MKT",
+    "exterior_walls": "Concrete Block",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "UNIT HEAT",
+    "cooling": "CENTRAL"
+   }
+  }
+ ],
+ "systems": {
+  "sprinkler": true,
+  "elevator_count": 0,
+  "loading_docks": 2,
+  "overhead_doors": 1
+ },
+ "room_detail": null,
+ "sales": [
+  {
+   "date": "2005-02-18",
+   "price": 2500000,
+   "grantee": "COOLEY STREET ASSOCIATES LLC"
+  }
+ ],
+ "permits": [
+  {
+   "date": "2021-01-13",
+   "number": "21BLDOT-00007AL",
+   "price": 64000,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2020-08-12",
+   "number": "20BLDOT-00112AL",
+   "price": 277500,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2019-06-11",
+   "number": "19BLDOT-00070AL",
+   "price": 100000,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2011-01-19",
+   "number": "11BLDOT-00006AL",
+   "price": 75500,
+   "purpose": "OTHER"
+  },
+  {
+   "date": "2010-08-06",
+   "number": "1008645",
+   "price": 200000,
+   "purpose": "OTHER"
+  },
+  {
+   "date": "2007-08-10",
+   "number": "703049",
+   "price": 4000000,
+   "purpose": "NEW BLDG"
+  }
+ ]
+}

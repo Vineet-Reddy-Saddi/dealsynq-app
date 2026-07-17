@@ -1,0 +1,128 @@
+{
+ "owner": "COOLEY STREET ASSOCIATES LLC",
+ "summary": {
+  "total": 10,
+  "counts": {
+   "deeds": 5,
+   "mortgages": 1,
+   "discharges": 0,
+   "liens": 0,
+   "leases": 1,
+   "easements": 1
+  },
+  "latest_mortgage": {
+   "date": "11-01-2005",
+   "lender": "TD BANKNORTH",
+   "book_page": "15461-432"
+  },
+  "mortgage_dates": [
+   "11-01-2005"
+  ],
+  "discharges_found": 0,
+  "has_any_lien": false
+ },
+ "records": [
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantee",
+   "reverse_party": "WALDBAUM INC",
+   "town": "Springfield",
+   "date_received": "02-18-2005",
+   "document_type": "Deed",
+   "document_desc": "LOTS 3-7 27/63 EX",
+   "book_page": "14832-431"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantor",
+   "reverse_party": null,
+   "town": "Springfield",
+   "date_received": "02-18-2005",
+   "document_type": "Easement",
+   "document_desc": "336/32",
+   "book_page": "14832-454"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantee",
+   "reverse_party": "SAGON, SHIRLEY M (&O)",
+   "town": "Springfield",
+   "date_received": "08-08-2005",
+   "document_type": "Deed",
+   "document_desc": "LOT 2 27/63",
+   "book_page": "15236-85"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantee",
+   "reverse_party": "DIAZ, RACHEL",
+   "town": "Springfield",
+   "date_received": "11-01-2005",
+   "document_type": "Deed",
+   "document_desc": "ALLEN ST",
+   "book_page": "15461-425"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantee",
+   "reverse_party": "HAYES-KAUFMAN PARTNERS",
+   "town": "Springfield",
+   "date_received": "11-01-2005",
+   "document_type": "Deed",
+   "document_desc": "LOT 1 27/63 &O",
+   "book_page": "15461-427"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantee",
+   "reverse_party": "FITZGERALD, FRANK (TR)",
+   "town": "Springfield",
+   "date_received": "11-01-2005",
+   "document_type": "Deed",
+   "document_desc": "ALLEN ST",
+   "book_page": "15461-429"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantor",
+   "reverse_party": "TD BANKNORTH",
+   "town": "Springfield",
+   "date_received": "11-01-2005",
+   "document_type": "Mortgage",
+   "document_desc": "LOT 2 27/63 &O",
+   "book_page": "15461-432"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantor",
+   "reverse_party": "TD BANKNORTH",
+   "town": "Springfield",
+   "date_received": "11-01-2005",
+   "document_type": "Assignment Of Lease",
+   "document_desc": "LOT 2 27/63 &O",
+   "book_page": "15461-452"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantee",
+   "reverse_party": "HAYES-KAUFMAN PARTNERS",
+   "town": "Springfield",
+   "date_received": "12-02-2005",
+   "document_type": "Generic Assignments",
+   "document_desc": "15388/346",
+   "book_page": "15544-402"
+  },
+  {
+   "party_name": "COOLEY STREET ASSOCIATES LLC",
+   "party_role": "grantor",
+   "reverse_party": "SPRINGFIELD CITY CONSE",
+   "town": "Springfield",
+   "date_received": "07-28-2006",
+   "document_type": "Order Of",
+   "document_desc": "COOLEY ST",
+   "book_page": "16079-501"
+  }
+ ],
+ "source": "Hampden County Registry of Deeds",
+ "fetched_at": "2026-07-17"
+}

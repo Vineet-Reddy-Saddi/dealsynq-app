@@ -1,0 +1,82 @@
+{
+ "owner": "FIVE TOWN STATION LLC",
+ "summary": {
+  "total": 6,
+  "counts": {
+   "deeds": 1,
+   "mortgages": 0,
+   "discharges": 0,
+   "liens": 0,
+   "leases": 1,
+   "easements": 1
+  },
+  "latest_mortgage": null,
+  "mortgage_dates": [],
+  "discharges_found": 0,
+  "has_any_lien": false
+ },
+ "records": [
+  {
+   "party_name": "FIVE TOWN STATION LLC",
+   "party_role": "grantee",
+   "reverse_party": "URSTADT BIDDLE PROPERT",
+   "town": "Springfield",
+   "date_received": "09-29-2014",
+   "document_type": "Deed",
+   "document_desc": "PARS I-V 207/114 &O",
+   "book_page": "20442-561"
+  },
+  {
+   "party_name": "FIVE TOWN STATION LLC (&O)",
+   "party_role": "grantor",
+   "reverse_party": "SPRINGFIELD CITY",
+   "town": "Springfield",
+   "date_received": "01-06-2017",
+   "document_type": "Decision",
+   "document_desc": "COOLEY ST",
+   "book_page": "21523-581"
+  },
+  {
+   "party_name": "FIVE TOWN STATION LLC (&O)",
+   "party_role": "grantor",
+   "reverse_party": "UNITED BANK",
+   "town": "Springfield",
+   "date_received": "08-08-2017",
+   "document_type": "Financing Statement",
+   "document_desc": "COOLEY ST UNIT 43",
+   "book_page": "21802-374"
+  },
+  {
+   "party_name": "FIVE TOWN STATION LLC",
+   "party_role": "grantor",
+   "reverse_party": null,
+   "town": "Hampden County",
+   "date_received": "10-05-2017",
+   "document_type": "Certificate",
+   "document_desc": "SEE RECORD",
+   "book_page": "21890-167"
+  },
+  {
+   "party_name": "FIVE TOWN STATION LLC",
+   "party_role": "grantor",
+   "reverse_party": "WESTERN MASSACHUS (&O)",
+   "town": "Springfield",
+   "date_received": "10-05-2017",
+   "document_type": "Easement",
+   "document_desc": "COOLEY ST",
+   "book_page": "21890-168"
+  },
+  {
+   "party_name": "FIVE TOWN STATION LLC",
+   "party_role": "grantor",
+   "reverse_party": "OLLIES BARGAIN OUTLET",
+   "town": "Springfield",
+   "date_received": "11-19-2025",
+   "document_type": "Lease",
+   "document_desc": "COOLEY ST",
+   "book_page": "26117-468"
+  }
+ ],
+ "source": "Hampden County Registry of Deeds",
+ "fetched_at": "2026-07-17"
+}

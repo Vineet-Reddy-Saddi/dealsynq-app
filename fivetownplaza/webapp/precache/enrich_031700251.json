@@ -1,0 +1,58 @@
+{
+ "apn": "031700251",
+ "situs": "115 COOLEY ST",
+ "use_class": "101: Single Family Residence",
+ "zoning": "R6",
+ "total_acres": "0.5327",
+ "value_flag": "MARKET APPROACH",
+ "assessment": {
+  "land": 66400,
+  "building": 228700,
+  "total": 295100
+ },
+ "building_count": 1,
+ "total_building_sqft": 1640,
+ "buildings": [
+  {
+   "card": 1,
+   "structure_type": "RANCH",
+   "grade": "C",
+   "year_built": "1952",
+   "sqft": 1640,
+   "detail": {
+    "stories": "1",
+    "exterior_walls": "ALUM/VINYL",
+    "heat_type": "BASIC",
+    "fuel_type": "GAS",
+    "basement": "FULL",
+    "condition": "AVERAGE"
+   }
+  }
+ ],
+ "systems": {
+  "sprinkler": false,
+  "elevator_count": 0,
+  "loading_docks": 0,
+  "overhead_doors": 0
+ },
+ "room_detail": {
+  "bedrooms": 3,
+  "rooms": 8,
+  "full_baths": 2
+ },
+ "sales": [
+  {
+   "date": "1985-08-06",
+   "price": 71000,
+   "grantee": "NEWTH WILLIAM E + MARY LOU"
+  }
+ ],
+ "permits": [
+  {
+   "date": "2007-09-06",
+   "number": "703202",
+   "price": 18500,
+   "purpose": "GARAGE"
+  }
+ ]
+}

@@ -1,0 +1,212 @@
+{
+ "apn": "031700053",
+ "situs": "380 COOLEY ST",
+ "use_class": "323: Shopping Centers",
+ "zoning": "SR1C1",
+ "total_acres": "19.7390",
+ "value_flag": "INCOME APPROACH",
+ "assessment": {
+  "land": 8932100,
+  "building": 21127200,
+  "total": 30059300
+ },
+ "building_count": 6,
+ "total_building_sqft": 311873,
+ "buildings": [
+  {
+   "card": 1,
+   "structure_type": "COMM SHOPPING CENTER",
+   "grade": "B",
+   "year_built": "1970",
+   "sqft": 188952,
+   "detail": {
+    "use_type": "JR DEPT STORE",
+    "exterior_walls": "Concrete Block",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "HOT AIR",
+    "cooling": "CENTRAL"
+   }
+  },
+  {
+   "card": 2,
+   "structure_type": "SUPERMARKET",
+   "grade": "A",
+   "year_built": "1996",
+   "sqft": 68660,
+   "detail": {
+    "use_type": "SUPER MKT",
+    "exterior_walls": "Concrete Block",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "HOT AIR",
+    "cooling": "CENTRAL"
+   }
+  },
+  {
+   "card": 3,
+   "structure_type": "COMM SHOPPING CENTER",
+   "grade": "B",
+   "year_built": "1987",
+   "sqft": 25280,
+   "detail": {
+    "use_type": "MULTI-USE RETAIL",
+    "exterior_walls": "Concrete Block",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "HOT AIR",
+    "cooling": "CENTRAL"
+   }
+  },
+  {
+   "card": 4,
+   "structure_type": "COMM SHOPPING CENTER",
+   "grade": "B",
+   "year_built": "1986",
+   "sqft": 14720,
+   "detail": {
+    "use_type": "MULTI-USE RETAIL",
+    "exterior_walls": "Concrete Block",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "HOT AIR",
+    "cooling": "CENTRAL"
+   }
+  },
+  {
+   "card": 5,
+   "structure_type": "RESTAURANT-FRAN",
+   "grade": "A",
+   "year_built": "1998",
+   "sqft": 7368,
+   "detail": {
+    "use_type": "FRANCHISES",
+    "exterior_walls": "Brick Veneer",
+    "construction_type": "WOOD FRAME/JOIST/BEAM",
+    "heat_type": "HOT AIR",
+    "cooling": "CENTRAL"
+   }
+  },
+  {
+   "card": 7,
+   "structure_type": "RESTAURANT-FRAN",
+   "grade": "A",
+   "year_built": "2004",
+   "sqft": 6893,
+   "detail": {
+    "use_type": "FRANCHISES",
+    "exterior_walls": "Frame",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "HOT AIR",
+    "cooling": "CENTRAL"
+   }
+  }
+ ],
+ "systems": {
+  "sprinkler": true,
+  "elevator_count": 1,
+  "loading_docks": 4,
+  "overhead_doors": 3
+ },
+ "room_detail": null,
+ "sales": [
+  {
+   "date": "2014-09-29",
+   "price": 31007400,
+   "grantee": "FIVE TOWN STATION LLC"
+  },
+  {
+   "date": "1970-02-18",
+   "price": 950000,
+   "grantee": "HUBBARD REAL ESTATE INVESTMENTS"
+  }
+ ],
+ "permits": [
+  {
+   "date": "2025-10-28",
+   "number": "OTH-25-139",
+   "price": 50000,
+   "purpose": "RE"
+  },
+  {
+   "date": "2025-06-25",
+   "number": "OT-00179AL",
+   "price": 1000,
+   "purpose": "AL"
+  },
+  {
+   "date": "2025-05-19",
+   "number": "OT-00154AL",
+   "price": 48840,
+   "purpose": "AL"
+  },
+  {
+   "date": "2025-03-05",
+   "number": "OT-00033RE",
+   "price": 57925,
+   "purpose": "RE"
+  },
+  {
+   "date": "2023-09-14",
+   "number": "OT-00147AL",
+   "price": 600000,
+   "purpose": "AL"
+  },
+  {
+   "date": "2023-07-18",
+   "number": "DEMO-00015",
+   "price": 137000,
+   "purpose": "DE"
+  },
+  {
+   "date": "2023-04-26",
+   "number": "OT-00001AD",
+   "price": 50000,
+   "purpose": "AD"
+  },
+  {
+   "date": "2022-02-10",
+   "number": "OT-00024AL",
+   "price": 6900,
+   "purpose": "AL"
+  },
+  {
+   "date": "2021-12-01",
+   "number": "21BLDOT-00180AL",
+   "price": 763111,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2021-07-26",
+   "number": "21BLDOT-00119AL",
+   "price": 10000,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2019-11-25",
+   "number": "19BLDOT-00180AL",
+   "price": 134722,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2019-06-18",
+   "number": "19BLDOT-00078AL",
+   "price": 18600,
+   "purpose": "REMODEL"
+  },
+  {
+   "date": "2019-02-05",
+   "number": "19BDOT-00005SM",
+   "price": 22000,
+   "purpose": "OTHER"
+  },
+  {
+   "date": "2018-05-09",
+   "number": "18BDOT-0071RE",
+   "price": 477000,
+   "purpose": "TRUSS/ROOF"
+  },
+  {
+   "date": "2018-04-24",
+   "number": "18BLDOT-00085AL",
+   "price": 148000,
+   "purpose": "REMODEL"
+  }
+ ]
+}

@@ -1,0 +1,130 @@
+{
+ "owner": "W & M REALTY INC AND WIENER LOUIS TRUSTEE",
+ "summary": {
+  "total": 10,
+  "counts": {
+   "deeds": 3,
+   "mortgages": 3,
+   "discharges": 0,
+   "liens": 1,
+   "leases": 2,
+   "easements": 0
+  },
+  "latest_mortgage": {
+   "date": "04-29-2026",
+   "lender": "REALTY CAPITAL (TR OF)",
+   "book_page": "26309-586"
+  },
+  "mortgage_dates": [
+   "12-09-2004",
+   "09-02-1986",
+   "04-29-2026"
+  ],
+  "discharges_found": 0,
+  "has_any_lien": true
+ },
+ "records": [
+  {
+   "party_name": "A, GUSTAVO (&O)",
+   "party_role": "grantor",
+   "reverse_party": "HOUSEHOLD FINANCE CORP",
+   "town": "Chicopee",
+   "date_received": "12-09-2004",
+   "document_type": "Mortgage",
+   "document_desc": "LOT 4B 118/98",
+   "book_page": "14687-206"
+  },
+  {
+   "party_name": "A, MARY",
+   "party_role": "grantee",
+   "reverse_party": "WHITMAN, STANL (JR &O)",
+   "town": "Holyoke",
+   "date_received": "09-02-1986",
+   "document_type": "Deed",
+   "document_desc": "PINE,CABOT STS",
+   "book_page": "6211-307"
+  },
+  {
+   "party_name": "A, MARY",
+   "party_role": "grantor",
+   "reverse_party": "PEOPLES SAVINGS BANK",
+   "town": "Holyoke",
+   "date_received": "09-02-1986",
+   "document_type": "Mortgage",
+   "document_desc": "PINE,CABOT STS",
+   "book_page": "6211-310"
+  },
+  {
+   "party_name": "A, MARY",
+   "party_role": "grantor",
+   "reverse_party": "U S A",
+   "town": "Hampden County",
+   "date_received": "12-19-1991",
+   "document_type": "Federal Tax Lien",
+   "document_desc": "SEE RECORD",
+   "book_page": "7886-297"
+  },
+  {
+   "party_name": "A, MARY",
+   "party_role": "grantor",
+   "reverse_party": "MIZULA, KATHRYN M",
+   "town": "Holyoke",
+   "date_received": "10-29-2001",
+   "document_type": "Deed",
+   "document_desc": "PINE,CABOT,ESSEX STS",
+   "book_page": "11940-582"
+  },
+  {
+   "party_name": "AAAAA BEE LINE CORP",
+   "party_role": "grantor",
+   "reverse_party": null,
+   "town": "Springfield",
+   "date_received": "07-29-1993",
+   "document_type": "Lease",
+   "document_desc": "PAGE BLVD",
+   "book_page": "8507-597"
+  },
+  {
+   "party_name": "AAAAA BEE-LINE CORP",
+   "party_role": "grantor",
+   "reverse_party": null,
+   "town": "Hampden County",
+   "date_received": "06-21-2001",
+   "document_type": "Surrender Of Lease",
+   "document_desc": "8507/597",
+   "book_page": "11708-301"
+  },
+  {
+   "party_name": "AAAA BAIL BONDS (&O DEFTS)",
+   "party_role": "grantor",
+   "reverse_party": null,
+   "town": "West Springfield",
+   "date_received": "03-30-2007",
+   "document_type": "Agreement",
+   "document_desc": "8774/29",
+   "book_page": "16591-514"
+  },
+  {
+   "party_name": "AAA ABATEMENT LC",
+   "party_role": "grantee",
+   "reverse_party": "AVILA, CHRISTIAN G",
+   "town": "Springfield",
+   "date_received": "04-29-2026",
+   "document_type": "Deed",
+   "document_desc": "QUINCY ST",
+   "book_page": "26309-584"
+  },
+  {
+   "party_name": "AAA ABATEMENT LC",
+   "party_role": "grantor",
+   "reverse_party": "REALTY CAPITAL (TR OF)",
+   "town": "Springfield",
+   "date_received": "04-29-2026",
+   "document_type": "Mortgage",
+   "document_desc": "QUINCY ST",
+   "book_page": "26309-586"
+  }
+ ],
+ "source": "Hampden County Registry of Deeds",
+ "fetched_at": "2026-07-17"
+}

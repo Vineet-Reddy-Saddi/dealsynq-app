@@ -1,0 +1,90 @@
+{
+ "apn": "081300548",
+ "situs": "1387 - 1391 MAIN ST",
+ "use_class": "340: General Office",
+ "zoning": "B3",
+ "total_acres": "0.2667",
+ "value_flag": "INCOME APPROACH",
+ "assessment": {
+  "land": 464200,
+  "building": 2073400,
+  "total": 2537600
+ },
+ "building_count": 1,
+ "total_building_sqft": 2602,
+ "buildings": [
+  {
+   "card": 1,
+   "structure_type": "OFFICE BLDG H-R 5ST",
+   "grade": "B+",
+   "year_built": "1915",
+   "sqft": 2602,
+   "detail": {
+    "use_type": "SUPPORT AREA",
+    "exterior_walls": "none",
+    "construction_type": "FIRE RESISTANT",
+    "heat_type": "NONE",
+    "cooling": "NONE"
+   }
+  }
+ ],
+ "systems": {
+  "sprinkler": true,
+  "elevator_count": 4,
+  "loading_docks": 0,
+  "overhead_doors": 0
+ },
+ "room_detail": null,
+ "sales": [
+  {
+   "date": "2022-06-10",
+   "price": 969026,
+   "grantee": "WIENER LOUIS TRUSTEE"
+  },
+  {
+   "date": "2007-05-30",
+   "price": 6000000,
+   "grantee": "JGT MASS LLC AND W &amp; M REALTY INC"
+  },
+  {
+   "date": "1999-01-05",
+   "price": 5000000,
+   "grantee": "HARRISON PLACE ASSOCIATES LLC"
+  },
+  {
+   "date": "1994-12-22",
+   "price": 550000,
+   "grantee": "KLONDIKE INVESTMENT GROUP INC"
+  },
+  {
+   "date": "1990-12-21",
+   "price": 7300000,
+   "grantee": "SPRINGFIELD INSTITUTION FOR SA"
+  },
+  {
+   "date": "1987-12-31",
+   "price": 0,
+   "grantee": "NORTON CHARLES F JR &amp; ET ALS"
+  }
+ ],
+ "permits": [
+  {
+   "date": "2022-08-01",
+   "number": "OT-00125AL",
+   "price": 1319719,
+   "purpose": "AL"
+  },
+  {
+   "date": "2015-05-13",
+   "number": "15BLDOT-00093AL",
+   "price": 85000,
+   "purpose": "OTHER"
+  },
+  {
+   "date": "2014-11-06",
+   "number": "14BLDOT-00209AL",
+   "price": 120000,
+   "purpose": "OTHER"
+  }
+ ]
+}

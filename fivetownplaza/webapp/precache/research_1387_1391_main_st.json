@@ -1,0 +1,585 @@
+{
+ "address": "1387-1391 MAIN ST",
+ "property_name": "W & M REALTY INC AND WIENER LOUIS TRUSTEE",
+ "generated_at": "2026-07-15T23:09:21+00:00",
+ "engine": "DuckDuckGo (html+lite) with Mojeek fallback",
+ "engines_used": {
+  "ddg": 2,
+  "mojeek": 2
+ },
+ "elapsed_seconds": 2229.5,
+ "query_count": 44,
+ "queries": [
+  "\"1387-1391 MAIN ST\"",
+  "\"1387-1391 MAIN ST\" property",
+  "\"1387-1391 MAIN ST\" for sale",
+  "\"1387-1391 MAIN ST\" sold",
+  "\"1387-1391 MAIN ST\" asking price",
+  "\"1387-1391 MAIN ST\" offering memorandum",
+  "\"1387-1391 MAIN ST\" investment sale",
+  "\"1387-1391 MAIN ST\" LoopNet",
+  "\"1387-1391 MAIN ST\" Crexi",
+  "\"1387-1391 MAIN ST\" CBRE",
+  "\"1387-1391 MAIN ST\" JLL",
+  "\"1387-1391 MAIN ST\" Cushman Wakefield",
+  "\"1387-1391 MAIN ST\" Colliers",
+  "\"1387-1391 MAIN ST\" Marcus Millichap",
+  "\"1387-1391 MAIN ST\" tenants",
+  "\"1387-1391 MAIN ST\" for lease",
+  "\"1387-1391 MAIN ST\" leasing",
+  "\"1387-1391 MAIN ST\" anchor tenant",
+  "\"1387-1391 MAIN ST\" vacancy",
+  "\"1387-1391 MAIN ST\" retailers",
+  "\"1387-1391 MAIN ST\" owner",
+  "\"1387-1391 MAIN ST\" acquired",
+  "\"1387-1391 MAIN ST\" acquisition",
+  "\"1387-1391 MAIN ST\" sold to",
+  "\"1387-1391 MAIN ST\" REIT",
+  "\"1387-1391 MAIN ST\" cap rate",
+  "\"1387-1391 MAIN ST\" NOI",
+  "\"1387-1391 MAIN ST\" rent roll",
+  "\"1387-1391 MAIN ST\" valuation",
+  "\"1387-1391 MAIN ST\" building permit",
+  "\"1387-1391 MAIN ST\" renovation",
+  "\"1387-1391 MAIN ST\" construction",
+  "\"1387-1391 MAIN ST\" zoning",
+  "\"1387-1391 MAIN ST\" site plan",
+  "\"1387-1391 MAIN ST\" planning board",
+  "\"1387-1391 MAIN ST\" special permit",
+  "\"1387-1391 MAIN ST\" development",
+  "\"1387-1391 MAIN ST\" environmental contamination",
+  "\"1387-1391 MAIN ST\" underground storage tank",
+  "\"1387-1391 MAIN ST\" brownfield",
+  "\"1387-1391 MAIN ST\" MassDEP",
+  "\"1387-1391 MAIN ST\" lawsuit",
+  "\"1387-1391 MAIN ST\" litigation",
+  "\"1387-1391 MAIN ST\" bankruptcy"
+ ],
+ "unique_url_count": 15,
+ "unique_domain_count": 10,
+ "categories": {
+  "Tenants / Leasing": [
+   "https://www.propertyshark.com/mason/Property/16282151/1387-W-30-St-Los-Angeles-CA-90007/",
+   "https://www.propertyshark.com/mason/Property/16282153/2941-S-Catalina-St-Los-Angeles-CA-90007/",
+   "https://www.propertyshark.com/mason/Property/16282141/2909-S-Catalina-St-Los-Angeles-CA-90007/",
+   "https://www.propertyshark.com/mason/Property/16282154/2939-S-Catalina-St-Los-Angeles-CA-90007/",
+   "https://offcampushousing.msudenver.edu/housing/neighborhood-West+Denver_73drghw",
+   "https://www.apartmenthomeliving.com/richmond/hospitals/childrens-hospital-of-richmond",
+   "http://www.byzantivm.fr/empbyztardlist.html",
+   "https://www.apartmenthomeliving.com/richmond/newtowne-west/apartments-for-rent/studio",
+   "http://www.uksaa.com/sss/2024_league.shtml",
+   "https://www.commercialcafe.com:443/commercial-real-estate/us/co/lafayette/",
+   "https://en.wikipedia.org/wiki/1860_in_Ireland",
+   "https://en.wikipedia.org/wiki/1814_in_Scotland",
+   "http://www.MikeParker.com/Site-Map",
+   "https://www.aircraftdealer.com/advertise.php",
+   "http://www.tuley.us/GTDatabase/languages/en/personlist_2.html"
+  ]
+ },
+ "by_domain": [
+  {
+   "domain": "propertyshark.com",
+   "count": 4,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "https://www.propertyshark.com/mason/Property/16282151/1387-W-30-St-Los-Angeles-CA-90007/"
+  },
+  {
+   "domain": "apartmenthomeliving.com",
+   "count": 2,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "https://www.apartmenthomeliving.com/richmond/hospitals/childrens-hospital-of-richmond"
+  },
+  {
+   "domain": "en.wikipedia.org",
+   "count": 2,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "https://en.wikipedia.org/wiki/1860_in_Ireland"
+  },
+  {
+   "domain": "aircraftdealer.com",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "https://www.aircraftdealer.com/advertise.php"
+  },
+  {
+   "domain": "byzantivm.fr",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "http://www.byzantivm.fr/empbyztardlist.html"
+  },
+  {
+   "domain": "commercialcafe.com:443",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "https://www.commercialcafe.com:443/commercial-real-estate/us/co/lafayette/"
+  },
+  {
+   "domain": "mikeparker.com",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "http://www.MikeParker.com/Site-Map"
+  },
+  {
+   "domain": "offcampushousing.msudenver.edu",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "https://offcampushousing.msudenver.edu/housing/neighborhood-West+Denver_73drghw"
+  },
+  {
+   "domain": "tuley.us",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "http://www.tuley.us/GTDatabase/languages/en/personlist_2.html"
+  },
+  {
+   "domain": "uksaa.com",
+   "count": 1,
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "sample_url": "http://www.uksaa.com/sss/2024_league.shtml"
+  }
+ ],
+ "sources": [
+  {
+   "url": "https://www.propertyshark.com/mason/Property/16282151/1387-W-30-St-Los-Angeles-CA-90007/",
+   "domain": "propertyshark.com",
+   "title": "1387 W 30th St, Los Angeles, CA - Owner, Sales, Taxes",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants",
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 2,
+   "best_rank": 0
+  },
+  {
+   "url": "https://www.propertyshark.com/mason/Property/16282153/2941-S-Catalina-St-Los-Angeles-CA-90007/",
+   "domain": "propertyshark.com",
+   "title": "2941 S Catalina St, Los Angeles, CA 90007 - Owner, Sales, Taxes",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants",
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 2,
+   "best_rank": 1
+  },
+  {
+   "url": "https://www.propertyshark.com/mason/Property/16282141/2909-S-Catalina-St-Los-Angeles-CA-90007/",
+   "domain": "propertyshark.com",
+   "title": "2909 S Catalina St, Los Angeles, CA 90007 - Owner, Sales, Taxes",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants",
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 2,
+   "best_rank": 1
+  },
+  {
+   "url": "https://www.propertyshark.com/mason/Property/16282154/2939-S-Catalina-St-Los-Angeles-CA-90007/",
+   "domain": "propertyshark.com",
+   "title": "2939 S Catalina St, Los Angeles, CA 90007 - Owner, Sales, Taxes",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants",
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 2,
+   "best_rank": 2
+  },
+  {
+   "url": "https://offcampushousing.msudenver.edu/housing/neighborhood-West+Denver_73drghw",
+   "domain": "offcampushousing.msudenver.edu",
+   "title": "Student Apartments for Rent Near Metropolitan State University",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants",
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 2,
+   "best_rank": 7
+  },
+  {
+   "url": "https://www.apartmenthomeliving.com/richmond/hospitals/childrens-hospital-of-richmond",
+   "domain": "apartmenthomeliving.com",
+   "title": "Apartments for Rent Near Children's Hospital Of Richmond in",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 4
+  },
+  {
+   "url": "http://www.byzantivm.fr/empbyztardlist.html",
+   "domain": "byzantivm.fr",
+   "title": "BYZANTIVM - Chapitre XIII - L'empire Byzantin restaur\u00e9 et les",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 4
+  },
+  {
+   "url": "https://www.apartmenthomeliving.com/richmond/newtowne-west/apartments-for-rent/studio",
+   "domain": "apartmenthomeliving.com",
+   "title": "Studio Newtowne West Apartments for Rent | Richmond, VA",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 5
+  },
+  {
+   "url": "http://www.uksaa.com/sss/2024_league.shtml",
+   "domain": "uksaa.com",
+   "title": "SSS 2023/24 UK Student Archery Association",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 5
+  },
+  {
+   "url": "https://www.commercialcafe.com:443/commercial-real-estate/us/co/lafayette/",
+   "domain": "commercialcafe.com:443",
+   "title": "Lafayette, CO Commercial Real Estate for Lease or Sale",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 6
+  },
+  {
+   "url": "https://en.wikipedia.org/wiki/1860_in_Ireland",
+   "domain": "en.wikipedia.org",
+   "title": "1860 in Ireland - Wikipedia",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 6
+  },
+  {
+   "url": "https://en.wikipedia.org/wiki/1814_in_Scotland",
+   "domain": "en.wikipedia.org",
+   "title": "1814 in Scotland - Wikipedia",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 7
+  },
+  {
+   "url": "http://www.MikeParker.com/Site-Map",
+   "domain": "mikeparker.com",
+   "title": "Northern Kentucky Site Map - Mike Parker Real Estate",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 8
+  },
+  {
+   "url": "https://www.aircraftdealer.com/advertise.php",
+   "domain": "aircraftdealer.com",
+   "title": "Sell Your Airplane | Sell Your Aircraft | Aircraft Classifieds",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" leasing"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 9
+  },
+  {
+   "url": "http://www.tuley.us/GTDatabase/languages/en/personlist_2.html",
+   "domain": "tuley.us",
+   "title": "TuleyRoots - Persons",
+   "snippet": "",
+   "categories": [
+    "Tenants / Leasing"
+   ],
+   "found_by": [
+    "\"1387-1391 MAIN ST\" tenants"
+   ],
+   "engines": [
+    "mojeek"
+   ],
+   "hits": 1,
+   "best_rank": 9
+  }
+ ],
+ "errors": [
+  {
+   "query": "\"1387-1391 MAIN ST\"",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" property",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" sold",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" asking price",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" offering memorandum",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" investment sale",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" LoopNet",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" Crexi",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" CBRE",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" JLL",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" Cushman Wakefield",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" Colliers",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" Marcus Millichap",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" for lease",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" anchor tenant",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" vacancy",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" retailers",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" owner",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" acquired",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" acquisition",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:no results"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" sold to",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" REIT",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" cap rate",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" NOI",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" rent roll",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" building permit",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" renovation",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" construction",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" zoning",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" site plan",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" planning board",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" special permit",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" development",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" environmental contamination",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" underground storage tank",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" brownfield",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" MassDEP",
+   "reason": "ddg:HTTPSConnectionPool(host='html.duckduckgo.com', port=443): Read timed out. (read; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" lawsuit",
+   "reason": "ddg:no results parsed; ddg-lite:HTTPSConnectionPool(host='lite.duckduckgo.com', port=443): Read timed out. (read; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" litigation",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTP 403"
+  },
+  {
+   "query": "\"1387-1391 MAIN ST\" bankruptcy",
+   "reason": "ddg:no results parsed; ddg-lite:no results parsed; mojeek:HTTPSConnectionPool(host='www.mojeek.com', port=443): Read timed out. (read time"
+  }
+ ]
+}

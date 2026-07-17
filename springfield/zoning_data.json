@@ -1,0 +1,901 @@
+{
+ "meta": {
+  "town": "Springfield, MA",
+  "source": "City of Springfield Zoning Ordinance (Articles 3, 4, 5)",
+  "ordinance_current_as_of": "Amended 12/16/25 (Use), 1/6/17 (Dimensional)",
+  "source_url": "https://www.springfield-ma.gov/planning/planning/zoning-ordinances",
+  "articles": {
+   "districts": "Article 3, Table 3-2",
+   "uses": "Article 4, Table 4-4 (Use Table)",
+   "dimensional": "Article 5, Tables 5-1 / 5-4 / 5-6"
+  },
+  "retrieved": "2026-07-15"
+ },
+ "code_legend": {
+  "Y": "Permitted by right (building permit only)",
+  "N": "Not allowed",
+  "T": "Special permit / site plan review (tiered by scale)",
+  "1": "Tier 1 review (site plan)",
+  "2": "Tier 2 review (special permit)",
+  "3": "Tier 3 review (special permit, highest)",
+  "D": "Allowed \u2014 exempt use under state law (e.g. Dover Amendment)"
+ },
+ "code_map": {
+  "RES A-1": "Res A-1",
+  "RESIDENCE A-1": "Res A-1",
+  "RES A": "Res A",
+  "RESIDENCE A": "Res A",
+  "RES B": "Res B",
+  "RESIDENCE B": "Res B",
+  "RES B-1": "Res B-1",
+  "RESIDENCE B-1": "Res B-1",
+  "RES C": "Res C",
+  "RESIDENCE C": "Res C",
+  "RES C-1": "Res C-1",
+  "RESIDENCE C-1": "Res C-1",
+  "RES C-2": "Res C-2",
+  "RESIDENCE C-2": "Res C-2",
+  "OFFICE A": "Office A",
+  "COM P": "Com P",
+  "COMMERCIAL PARKING": "Com P",
+  "COM A": "Com A",
+  "COMMERCIAL A": "Com A",
+  "BUS A": "Bus A",
+  "BUSINESS A": "Bus A",
+  "BUS B": "Bus B",
+  "BUSINESS B": "Bus B",
+  "BUS B-1": "Bus B-1",
+  "BUSINESS B-1": "Bus B-1",
+  "BUS C": "Bus C",
+  "BUSINESS C (CENTRAL BUSINESS)": "Bus C",
+  "BUS D": "Bus D",
+  "BUSINESS D (REGIONAL SHOPPING)": "Bus D",
+  "MUI": "MUI",
+  "MIXED USE INDUSTRIAL": "MUI",
+  "IA": "IA",
+  "INDUSTRIAL A": "IA",
+  "IP": "IP",
+  "INDUSTRIAL PARK": "IP",
+  "OS": "OS",
+  "OPEN SPACE": "OS",
+  "RF": "RF",
+  "RIVERFRONT": "RF",
+  "BUSINESS C": "Bus C",
+  "COMMERCIAL P": "Com P",
+  "CONN RIVERFRONT": "RF",
+  "B1": "Bus A",
+  "B2": "Bus B",
+  "B3": "Bus C",
+  "B4": "Bus D",
+  "C1": "Com A",
+  "R2": "Office A",
+  "I2": "IA"
+ },
+ "districts": {
+  "Res A-1": {
+   "key": "Res A-1",
+   "name": "Residence A-1",
+   "group": "Residential",
+   "purpose": "Lowest-density residential; single-family detached dwellings.",
+   "dimensional": {
+    "min_lot_sf_sf_dwelling": 10000,
+    "min_frontage_ft": 50,
+    "front_yard_min_ft": 25
+   },
+   "use_column": "Res A/A1"
+  },
+  "Res A": {
+   "key": "Res A",
+   "name": "Residence A",
+   "group": "Residential",
+   "purpose": "Low-density residential; primarily single-family detached.",
+   "dimensional": {
+    "min_lot_sf_sf_dwelling": 7500,
+    "min_frontage_ft": 50,
+    "front_yard_min_ft": 25
+   },
+   "use_column": "Res A/A1"
+  },
+  "Res B": {
+   "key": "Res B",
+   "name": "Residence B",
+   "group": "Residential",
+   "purpose": "Medium-density residential; single- and two-family.",
+   "dimensional": {
+    "min_lot_sf_sf_dwelling": 6000,
+    "min_frontage_ft": 50,
+    "front_yard_min_ft": 15
+   },
+   "use_column": "Res B/B1"
+  },
+  "Res B-1": {
+   "key": "Res B-1",
+   "name": "Residence B-1",
+   "group": "Residential",
+   "purpose": "High-density single- and two-family.",
+   "dimensional": {
+    "min_lot_sf_sf_dwelling": 4500,
+    "min_frontage_ft": 45,
+    "front_yard_min_ft": 10
+   },
+   "use_column": "Res B/B1"
+  },
+  "Res C": {
+   "key": "Res C",
+   "name": "Residence C",
+   "group": "Residential",
+   "purpose": "Multi-family residential (single, two- and multi-family).",
+   "dimensional": {
+    "min_lot_sf_sf_dwelling": 4500,
+    "min_frontage_ft": 45,
+    "front_yard_min_ft": 10
+   },
+   "use_column": "Res C/C2"
+  },
+  "Res C-1": {
+   "key": "Res C-1",
+   "name": "Residence C-1",
+   "group": "Residential",
+   "purpose": "Multi-family in clustered developments with open space/common facilities.",
+   "dimensional": {
+    "min_lot_sf_sf_dwelling": 5000,
+    "min_frontage_ft": 30,
+    "front_yard_min_ft": 25
+   },
+   "use_column": "Res C-1"
+  },
+  "Res C-2": {
+   "key": "Res C-2",
+   "name": "Residence C-2",
+   "group": "Residential",
+   "purpose": "High-rise apartments on collector/arterial streets; limited ground-floor business.",
+   "dimensional": {
+    "min_lot_sf_per_apt_unit": 580,
+    "min_frontage_ft": 25,
+    "front_yard_min_ft": 25
+   },
+   "use_column": "Res C/C2"
+  },
+  "Office A": {
+   "key": "Office A",
+   "name": "Office A",
+   "group": "Commercial",
+   "purpose": "Offices converted from former residential buildings (owner need not reside).",
+   "dimensional": {
+    "min_lot_sf": 6000,
+    "min_frontage_ft": 50,
+    "front_yard_min_ft": 25,
+    "side_yard_abut_residential_ft": 3,
+    "side_yard_abut_nonresidential_ft": 3,
+    "rear_yard_abut_residential_ft": 25,
+    "rear_yard_abut_nonresidential_ft": 0,
+    "max_stories": 2,
+    "max_height_ft": 35,
+    "max_building_coverage_pct": 55
+   },
+   "use_column": "Office A"
+  },
+  "Com P": {
+   "key": "Com P",
+   "name": "Commercial Parking",
+   "group": "Commercial",
+   "purpose": "Commercial surface parking lots only, adjacent to commercial uses.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 10,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": 0,
+    "rear_yard_abut_residential_ft": null,
+    "rear_yard_abut_nonresidential_ft": null,
+    "max_stories": 2,
+    "max_height_ft": 30,
+    "max_building_coverage_pct": 35
+   },
+   "use_column": "Com P"
+  },
+  "Com A": {
+   "key": "Com A",
+   "name": "Commercial A",
+   "group": "Commercial",
+   "purpose": "Small-scale neighborhood-serving commercial; residential also allowed.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 20,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": 10,
+    "rear_yard_abut_residential_ft": 10,
+    "rear_yard_abut_nonresidential_ft": 0,
+    "max_stories": 2,
+    "max_height_ft": 30,
+    "max_building_coverage_pct": 55
+   },
+   "use_column": "Com A"
+  },
+  "Bus A": {
+   "key": "Bus A",
+   "name": "Business A",
+   "group": "Business",
+   "purpose": "General Business \u2014 Main Street / pedestrian-oriented shopping; residential allowed.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 10,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": 0,
+    "rear_yard_abut_residential_ft": 10,
+    "rear_yard_abut_nonresidential_ft": 0,
+    "max_stories": 4,
+    "max_height_ft": 60,
+    "max_building_coverage_pct": 75
+   },
+   "use_column": "Bus A"
+  },
+  "Bus B": {
+   "key": "Bus B",
+   "name": "Business B",
+   "group": "Business",
+   "purpose": "Service Business \u2014 highway-oriented automotive & service uses, more intense than Business A.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 10,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": 0,
+    "rear_yard_abut_residential_ft": 10,
+    "rear_yard_abut_nonresidential_ft": 0,
+    "max_stories": null,
+    "max_height_ft": 60,
+    "max_building_coverage_pct": 80
+   },
+   "use_column": "Bus B"
+  },
+  "Bus B-1": {
+   "key": "Bus B-1",
+   "name": "Business B-1",
+   "group": "Business",
+   "purpose": "Corporate campus / office park.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 10,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": 0,
+    "rear_yard_abut_residential_ft": 10,
+    "rear_yard_abut_nonresidential_ft": 0,
+    "max_stories": null,
+    "max_height_ft": 60,
+    "max_building_coverage_pct": 80
+   },
+   "use_column": "Bus B1"
+  },
+  "Bus C": {
+   "key": "Bus C",
+   "name": "Business C (Central Business)",
+   "group": "Business",
+   "purpose": "Downtown; pedestrian amenities and high-rise buildings with no setbacks.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 0,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": null,
+    "rear_yard_abut_residential_ft": 10,
+    "rear_yard_abut_nonresidential_ft": null,
+    "max_stories": null,
+    "max_height_ft": 400,
+    "max_building_coverage_pct": 95
+   },
+   "use_column": "Bus C"
+  },
+  "Bus D": {
+   "key": "Bus D",
+   "name": "Business D (Regional Shopping)",
+   "group": "Business",
+   "purpose": "Regional shopping centers.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "min_frontage_ft": null,
+    "front_yard_min_ft": 0,
+    "side_yard_abut_residential_ft": 10,
+    "side_yard_abut_nonresidential_ft": 0,
+    "rear_yard_abut_residential_ft": 10,
+    "rear_yard_abut_nonresidential_ft": 0,
+    "max_stories": null,
+    "max_height_ft": 60,
+    "max_building_coverage_pct": 100
+   },
+   "use_column": "Bus D"
+  },
+  "MUI": {
+   "key": "MUI",
+   "name": "Mixed Use Industrial",
+   "group": "Industrial",
+   "purpose": "Mixed-use industrial; light industry with residential/commercial mix.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "max_height_ft": 100,
+    "max_building_coverage_pct": 90,
+    "max_building_coverage_pct_residential": 60,
+    "max_residential_density_du_per_acre": 75
+   },
+   "use_column": "MUI"
+  },
+  "IA": {
+   "key": "IA",
+   "name": "Industrial A",
+   "group": "Industrial",
+   "purpose": "General industrial.",
+   "dimensional": {
+    "min_lot_sf": null,
+    "max_height_ft": 100,
+    "max_building_coverage_pct": 95
+   },
+   "use_column": "IA"
+  },
+  "IP": {
+   "key": "IP",
+   "name": "Industrial Park",
+   "group": "Industrial",
+   "purpose": "Planned industrial park.",
+   "dimensional": {
+    "min_lot_acres": 1.5,
+    "min_frontage_ft": 200,
+    "front_yard_min_ft": 25,
+    "side_yard_min_ft": 15,
+    "rear_yard_min_ft": 25,
+    "max_height_ft": 100,
+    "max_building_coverage_pct": 50
+   },
+   "use_column": "IP"
+  },
+  "OS": {
+   "key": "OS",
+   "name": "Open Space",
+   "group": "Special",
+   "purpose": "Park and open space.",
+   "dimensional": {},
+   "use_column": "OS"
+  },
+  "RF": {
+   "key": "RF",
+   "name": "Riverfront",
+   "group": "Special",
+   "purpose": "Connecticut Riverfront district.",
+   "dimensional": {},
+   "use_column": "RF"
+  }
+ },
+ "uses": [
+  {
+   "use": "Retail Sales & Service",
+   "category": "Retail",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "T",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "T",
+    "Bus D": "Y",
+    "RF": "3",
+    "MUI": "2",
+    "IA": "2",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Wholesale Sales",
+   "category": "Retail",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "N",
+    "Bus B": "T",
+    "Bus B1": "N",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "N",
+    "MUI": "T",
+    "IA": "T",
+    "IP": "T"
+   }
+  },
+  {
+   "use": "Restaurant",
+   "category": "Food & Drink",
+   "codes": {
+    "OS": "",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "1",
+    "Bus A": "1",
+    "Bus B": "1",
+    "Bus B1": "2",
+    "Bus C": "1",
+    "Bus D": "1",
+    "RF": "2",
+    "MUI": "2",
+    "IA": "1",
+    "IP": "1"
+   }
+  },
+  {
+   "use": "Tavern",
+   "category": "Food & Drink",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "2",
+    "MUI": "T",
+    "IA": "2",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Bank / Financial Institution",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "1",
+    "Bus A": "1",
+    "Bus B": "1",
+    "Bus B1": "1",
+    "Bus C": "1",
+    "Bus D": "Y",
+    "RF": "3",
+    "MUI": "1",
+    "IA": "1",
+    "IP": "1"
+   }
+  },
+  {
+   "use": "Business / Professional Office",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "Y",
+    "Com P": "N",
+    "Com A": "T",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "1",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "T",
+    "MUI": "2",
+    "IA": "2",
+    "IP": "2"
+   }
+  },
+  {
+   "use": "Medical / Dental Office",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "3",
+    "Com P": "N",
+    "Com A": "3",
+    "Bus A": "3",
+    "Bus B": "3",
+    "Bus B1": "3",
+    "Bus C": "3",
+    "Bus D": "3",
+    "RF": "3",
+    "MUI": "3",
+    "IA": "3",
+    "IP": "3"
+   }
+  },
+  {
+   "use": "Hospital / Medical Clinic",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "3",
+    "Com P": "N",
+    "Com A": "3",
+    "Bus A": "3",
+    "Bus B": "3",
+    "Bus B1": "3",
+    "Bus C": "3",
+    "Bus D": "3",
+    "RF": "3",
+    "MUI": "3",
+    "IA": "3",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Personal Services (salon, etc.)",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "1",
+    "Bus A": "1",
+    "Bus B": "1",
+    "Bus B1": "1",
+    "Bus C": "1",
+    "Bus D": "Y",
+    "RF": "N",
+    "MUI": "1",
+    "IA": "1",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Health Club / Fitness",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "N",
+    "Res C/C2": "N/T",
+    "Office A": "N",
+    "Com P": "",
+    "Com A": "",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "T",
+    "MUI": "1",
+    "IA": "1",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Veterinary Clinic",
+   "category": "Office & Services",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "T",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "N",
+    "Bus C": "N",
+    "Bus D": "T",
+    "RF": "N",
+    "MUI": "N",
+    "IA": "T",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Hotel",
+   "category": "Lodging",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "T",
+    "MUI": "T",
+    "IA": "T",
+    "IP": "T"
+   }
+  },
+  {
+   "use": "Motel",
+   "category": "Lodging",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "",
+    "Res B/B1": "",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "N",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "N",
+    "MUI": "N",
+    "IA": "T",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Motor Vehicle Sales / Leasing",
+   "category": "Auto",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "N",
+    "Bus B": "3",
+    "Bus B1": "N",
+    "Bus C": "N",
+    "Bus D": "3",
+    "RF": "N",
+    "MUI": "3",
+    "IA": "3",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Gas Station (no repair)",
+   "category": "Auto",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "3",
+    "Bus B": "3",
+    "Bus B1": "3",
+    "Bus C": "N",
+    "Bus D": "2",
+    "RF": "N",
+    "MUI": "N",
+    "IA": "3",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Car Wash",
+   "category": "Auto",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "3",
+    "Bus B": "3",
+    "Bus B1": "N",
+    "Bus C": "N",
+    "Bus D": "2",
+    "RF": "N",
+    "MUI": "N",
+    "IA": "2",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Light Industrial",
+   "category": "Industrial",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "N",
+    "Bus B": "2",
+    "Bus B1": "N",
+    "Bus C": "3",
+    "Bus D": "N",
+    "RF": "N",
+    "MUI": "1",
+    "IA": "1",
+    "IP": "T"
+   }
+  },
+  {
+   "use": "Warehousing / Distribution",
+   "category": "Industrial",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "N",
+    "Bus A": "N",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "N",
+    "Bus D": "N",
+    "RF": "N",
+    "MUI": "2",
+    "IA": "2",
+    "IP": "2"
+   }
+  },
+  {
+   "use": "Surface Parking Lot",
+   "category": "Parking",
+   "codes": {
+    "OS": "",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "N",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "Y",
+    "Com A": "Y",
+    "Bus A": "Y",
+    "Bus B": "Y",
+    "Bus B1": "Y",
+    "Bus C": "Y",
+    "Bus D": "Y",
+    "RF": "T",
+    "MUI": "Y",
+    "IA": "Y",
+    "IP": "Y"
+   }
+  },
+  {
+   "use": "Parking Garage",
+   "category": "Parking",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "N",
+    "Res C/C2": "N",
+    "Office A": "N",
+    "Com P": "T",
+    "Com A": "N",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "T",
+    "MUI": "T",
+    "IA": "T",
+    "IP": "T"
+   }
+  },
+  {
+   "use": "Two-family Dwelling",
+   "category": "Residential",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "Y",
+    "Res C-1": "N",
+    "Res C/C2": "Y/N",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "Y",
+    "Bus A": "Y",
+    "Bus B": "Y",
+    "Bus B1": "N",
+    "Bus C": "N",
+    "Bus D": "N",
+    "RF": "N",
+    "MUI": "N",
+    "IA": "N",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Apartment Building",
+   "category": "Residential",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "T",
+    "Res C/C2": "T",
+    "Office A": "N",
+    "Com P": "N",
+    "Com A": "T",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "N",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "3",
+    "MUI": "N",
+    "IA": "N",
+    "IP": "N"
+   }
+  },
+  {
+   "use": "Mixed-use Building",
+   "category": "Residential",
+   "codes": {
+    "OS": "N",
+    "Res A/A1": "N",
+    "Res B/B1": "N",
+    "Res C-1": "T",
+    "Res C/C2": "T",
+    "Office A": "T",
+    "Com P": "N",
+    "Com A": "T",
+    "Bus A": "T",
+    "Bus B": "T",
+    "Bus B1": "T",
+    "Bus C": "T",
+    "Bus D": "T",
+    "RF": "T",
+    "MUI": "T",
+    "IA": "N",
+    "IP": "N"
+   }
+  }
+ ]
+}

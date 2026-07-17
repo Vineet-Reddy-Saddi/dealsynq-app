@@ -1,0 +1,21 @@
+{
+ "owner": "NEWTH WILLIAM E + MARY LOU",
+ "summary": {
+  "total": 0,
+  "counts": {
+   "deeds": 0,
+   "mortgages": 0,
+   "discharges": 0,
+   "liens": 0,
+   "leases": 0,
+   "easements": 0
+  },
+  "latest_mortgage": null,
+  "mortgage_dates": [],
+  "discharges_found": 0,
+  "has_any_lien": false
+ },
+ "records": [],
+ "source": "Hampden County Registry of Deeds",
+ "fetched_at": "2026-07-17"
+}

@@ -1,0 +1,3 @@
+# Root requirements so any host (Render's native Python detector included) finds it.
+# The real list lives in deploy/requirements.txt.
+-r deploy/requirements.txt

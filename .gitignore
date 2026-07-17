@@ -1,0 +1,12 @@
+# DealSynq app — standalone deploy repo. This folder is already just the app,
+# so a plain ignore list is all that's needed.
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.output
+
+# secrets — proxy credentials go in the DEALSYNQ_PROXY_CONFIG env var on the host
+**/proxy_config.json
+!**/proxy_config.example.json
+.env

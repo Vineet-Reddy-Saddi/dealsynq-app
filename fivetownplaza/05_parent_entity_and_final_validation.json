@@ -1,0 +1,67 @@
+{
+  "property_name": "Five Town Plaza",
+  "thread": "parent entity resolution",
+  "status": "RESOLVED (previously blocked at MA SOC / OpenCorporates -- pivoted to SEC EDGAR since owner is a public REIT)",
+  "parent_entity_chain": {
+    "property_owning_entity": {
+      "name": "Five Town Station LLC",
+      "jurisdiction": "Delaware"
+    },
+    "parent": {
+      "name": "Phillips Edison Grocery Center REIT I, Inc.",
+      "jurisdiction": "Maryland",
+      "note": "later renamed/became Phillips Edison & Company, Inc., NASDAQ: PECO"
+    },
+    "source": "SEC Exhibit 21.1 (Subsidiaries of the Registrant), filed with Phillips Edison Grocery Center REIT I FY2014 Form 10-K",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1476204/000147620415000003/pentr-20141231xex211.htm",
+    "fact_type": "direct",
+    "value_confidence": 1.0,
+    "match_confidence": 1.0,
+    "retrieved_at": "2026-07-12T20:19:23",
+    "effective_date": "FY2014 10-K (filed 2015)",
+    "note": "Entity naming pattern \"[Property Name] Station LLC\" appears ~150+ times in this same exhibit -- confirmed as PECO's standard one-subsidiary-per-property holding structure, not a one-off."
+  },
+  "sale_transaction_triple_confirmed": {
+    "price": 31007400,
+    "date": "2014-09-29 (deed) / 2014-09-25 (seller press release date)",
+    "sources": [
+      {
+        "source": "Hampden County Registry of Deeds",
+        "gives": "book/page 20442/561, party names, recording date"
+      },
+      {
+        "source": "Springfield Assessor record card, Sales/Ownership History",
+        "gives": "exact price $31,007,400, deed type SALE OF MULTIPLE PARCELS"
+      },
+      {
+        "source": "Urstadt Biddle Properties Inc. SEC Form 8-K + press release (seller side)",
+        "gives": "identical price $31,007,400, confirms all-cash, confirms institutional buyer",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1029800/000102980014000039/exhibit99_1.htm"
+      }
+    ],
+    "verdict": "Three independent sources (buyer-side registry, government assessor, seller-side federal SEC filing) agree exactly on price and date. Verified tier -- as strong as this data gets."
+  },
+  "mortgage_question_resolved": {
+    "finding": "No mortgage recorded against the parcel (confirmed via Hampden registry, cross-validated against a working scraper).",
+    "explanation_found": "Seller (Urstadt Biddle) SEC press release states the sale was \"an all cash price\" and that proceeds were used to repay Urstadt Biddle's own UNSECURED revolving credit facility -- consistent with no property-specific mortgage being recorded. Likely explanation: Phillips Edison financed the acquisition at the corporate/OP level (common for grocery-anchored shopping center REITs) rather than via a property-secured loan, which is why Hampden County shows no MTG document.",
+    "confidence": "estimated/inferred (fact_type=inferred) -- we did not find a PECO-side filing that explicitly states their financing method for this specific acquisition, only that it is consistent with the absence of a recorded mortgage."
+  },
+  "bonus_historical_context": {
+    "ownership_since_1970s": "Urstadt Biddle owned the property since the early 1970s (matches our own found 1970-02-18 prior sale to Hubbard Real Estate Investments -- likely a predecessor/merged entity name, not a contradiction).",
+    "anchor_tenant_lineage": {
+      "supermarket_anchor": [
+        "Mott's ShopRite",
+        "A&P",
+        "Big Y (current)"
+      ],
+      "discount_department_store_anchor": [
+        "W.T. Grant",
+        "Caldor's",
+        "Spag's",
+        "Burlington Coat Factory (current)"
+      ]
+    },
+    "source": "Urstadt Biddle Properties Inc. SEC press release, Sept 25 2014"
+  },
+  "_generated_at": "2026-07-12T20:19:23"
+}

@@ -1,0 +1,48 @@
+{
+  "property_name": "Five Town Plaza",
+  "validation_round": 2,
+  "findings": {
+    "2014_sale_price_confirmed": {
+      "value": 31007400,
+      "source": "Springfield Assessor commercial property record card (Sales/Ownership History section)",
+      "source_url": "https://www.springfield-ma.gov/finance/assessors-search/assessors.php?parcel=031700053",
+      "note": "Confirms and refines the deed we already found via Hampden Registry (book/page 20442/561, 2014-09-29, grantor Urstadt Biddle Properties). Registry gave us the transaction; the assessor record card gave us the actual dollar price and deed type (SALE OF MULTIPLE PARCELS). Two independent sources now agree on this transaction -- Verified tier.",
+      "fact_type": "direct",
+      "value_confidence": 1.0,
+      "retrieved_at": "2026-07-11T15:05:02"
+    },
+    "1970_prior_sale_found": {
+      "value": 950000,
+      "date": "1970-02-18",
+      "grantee_at_time": "HUBBARD REAL ESTATE INVESTMENTS",
+      "note": "Full ownership chain now spans 1970 (original development era, matches Card 1 year_built=1970) through 2014 (Urstadt Biddle -> Five Town Station LLC/Phillips Edison) to present."
+    },
+    "building_sqft_independent_validation": {
+      "method": "Summed Interior/Exterior Information area tables across every building card on all 9 parcels via Springfield assessor record cards (a completely independent GOVERNMENT source, never touched before now).",
+      "result_sqft": 336205,
+      "compared_to_peco_flyer_sqft": 327303,
+      "compared_to_loopnet_pdf_sqft": 328372,
+      "variance_pct": -2.7,
+      "verdict": "MATCH within normal measurement-convention tolerance (assessor sqft vs. leasing GLA often differ ~2-5% due to different measurement standards). Building size is now confirmed by THREE independent sources (2 private marketing, 1 government), not just one.",
+      "data_quality_catch": "Initial pass wrongly included a 65,340 sqft LAND-type record card (1761 Allen St, card 2) which inflated the naive total by 22%. Structure_type field must be checked per card -- not every card on a parcel is a building; some are land-only entries. Caught and excluded before reporting."
+    },
+    "permit_history_pulled": {
+      "source": "Springfield Assessor record card, Permit Information section (main parcel only so far)",
+      "count": "25+ permits, 2010-2025",
+      "notable": [
+        "2023 DEMO-00015 demolition permit $137,000",
+        "2023 OT-00147AL alteration $600,000",
+        "2021 remodel $763,111",
+        "2025 OTH-25-139 $50,000"
+      ],
+      "note": "This directly satisfies spec section 13 (Permit/Inspection/Code data) for the main parcel -- real permit_type/date/value records, not inferred."
+    },
+    "zoning_refined": {
+      "old_value": "Split (from parcel CSV)",
+      "new_value": "SR1C1 (from record card)",
+      "note": "More specific official zoning code than the coarse CSV export had."
+    },
+    "use_classification_confirmed": "Class 323: Shopping Centers (official MA assessor use code) -- corroborates property_type=retail/shopping_center classification."
+  },
+  "_generated_at": "2026-07-11T15:05:02"
+}
