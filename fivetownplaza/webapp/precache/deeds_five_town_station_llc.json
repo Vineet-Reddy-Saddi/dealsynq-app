@@ -11,6 +11,7 @@
    "easements": 1
   },
   "latest_mortgage": null,
+  "latest_lien": null,
   "mortgage_dates": [],
   "discharges_found": 0,
   "has_any_lien": false

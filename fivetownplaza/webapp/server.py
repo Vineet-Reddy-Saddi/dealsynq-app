@@ -168,7 +168,7 @@ def _bbox_adjacent(a, b, gap_lat, gap_lon):
             (a[1] - gap_lon) <= b[3] and (a[3] + gap_lon) >= b[1])
 
 
-def assemblage_cluster(anchor, owner_parcels, gap_m=12.0):
+def assemblage_cluster(anchor, owner_parcels, gap_m=15.0):
     """The actual PROPERTY = the anchor plus every same-owner parcel that is CONTIGUOUS
     with it (a connected cluster of touching bounding boxes), not everything the owner
     happens to hold.
@@ -1330,7 +1330,11 @@ function renderDeeds(doc,cached){
   if(c.deeds) h+='<div class="dpill"><b>'+c.deeds+'</b>deeds</div>';
   h+='<div class="dpill'+(c.mortgages?(attention?" hot":""):" clear")+'"><b>'+c.mortgages+'</b>mortgage'+(c.mortgages==1?"":"s")+'</div>';
   if(c.discharges) h+='<div class="dpill"><b>'+c.discharges+'</b>discharges</div>';
-  if(c.liens) h+='<div class="dpill hot"><b>'+c.liens+'</b>liens</div>';
+  // a lien is only a live concern if RECENT — an old (esp. >10yr) lien is very likely
+  // released/expired, so don't red-flag it as active.
+  const ll=s.latest_lien; const lienAge=ll&&ll.age_years!=null?ll.age_years:null;
+  const lienHot=(lienAge!=null&&lienAge<=10);
+  if(c.liens) h+='<div class="dpill'+(lienHot?" hot":"")+'"><b>'+c.liens+'</b>lien'+(c.liens==1?"":"s")+'</div>';
   if(c.leases) h+='<div class="dpill"><b>'+c.leases+'</b>lease'+(c.leases==1?"":"s")+'</div>';
   if(c.easements) h+='<div class="dpill"><b>'+c.easements+'</b>easement'+(c.easements==1?"":"s")+'</div>';
   h+='</div>';
@@ -1351,6 +1355,15 @@ function renderDeeds(doc,cached){
       h+=' All recorded: '+s.mortgage_dates.map(esc).join(', ')+'.';
   }
   h+=' <span style="color:var(--slate)">A payoff can&rsquo;t be confirmed from a name search &mdash; discharges are usually recorded under the <b>lender&rsquo;s</b> name, so their absence here is <b>not</b> proof a loan is outstanding.</span></div>';
+
+  // lien read — age-aware, so a decades-old (self-released) lien isn't shown as a live risk
+  if(c.liens&&ll){
+    h+='<div class="muted" style="margin:-4px 0 12px">';
+    if(lienAge==null) h+='<b>'+c.liens+' lien'+(c.liens==1?"":"s")+'</b> recorded ('+esc(titlecase(ll.type||"lien"))+').';
+    else if(lienHot) h+='<b style="color:#B3261E">Recent lien: '+esc(titlecase(ll.type||"lien"))+', '+esc(ll.date||"")+' ('+lienAge+' yr'+(lienAge==1?"":"s")+' old)</b> &mdash; worth verifying it&rsquo;s been resolved.';
+    else h+='Newest lien ('+esc(titlecase(ll.type||"lien"))+') is <b>'+lienAge+' years old</b> &mdash; liens of this age are typically released or expired (federal tax liens self-release after 10 years), so very likely resolved.';
+    h+='</div>';
+  }
 
   if(doc.records&&doc.records.length){
     h+='<table><tr><th>Recorded</th><th>Document</th><th>Book/Page</th><th>Counterparty</th></tr>';

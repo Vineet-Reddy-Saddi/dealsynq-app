@@ -38,6 +38,7 @@ import argparse
 import html as html_mod
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -146,27 +147,45 @@ def summarize(records):
     useful signal is the MOST RECENT mortgage: a 2026 mortgage matters, a 1986 one is
     almost certainly long satisfied. We report recency and let the reader judge.
     """
-    def has(rec, *words):
+    def w(rec, *words):
+        """Whole-WORD match on the document type. Crucial: substring matching miscounts —
+        'RELEASE' contains 'LEASE', 'Release of Lien' contains 'LIEN', etc. Word boundaries
+        stop that ('\\bLEASE\\b' does not match inside 'RELEASE')."""
         t = (rec.get("document_type") or "").upper()
-        return any(w in t for w in words)
+        return any(re.search(r"\b" + re.escape(x) + r"\b", t) for x in words)
 
-    mortgages = [r for r in records if has(r, "MORTGAGE") and not has(r, "DISCHARGE", "ASSIGNMENT")]
-    discharges = [r for r in records if has(r, "DISCHARGE")]
-    deeds_ = [r for r in records if has(r, "DEED")]
-    liens = [r for r in records if has(r, "LIEN", "ATTACHMENT", "EXECUTION")]
-    # An "Assignment of Lease/Rents" is loan collateral (rents pledged to the lender), NOT
-    # a lease — counting it as one overstates a property's leasing. Same for lease
-    # subordinations. Only genuine LEASE / LEASE MEMORANDUM instruments count here.
-    leases = [r for r in records if has(r, "LEASE")
-              and not has(r, "ASSIGNMENT", "SUBORDINAT")]
-    easements = [r for r in records if has(r, "EASEMENT")]
+    # Instruments whose wording FLIPS the meaning of the base document — a subordination,
+    # assignment, release, discharge or surrender of a mortgage/lease is not itself a new
+    # mortgage/lease. These are the exclusions that keep the counts honest.
+    FLIP = ("DISCHARGE", "RELEASE", "ASSIGNMENT", "SUBORDINAT", "SUBORDINATION",
+            "SURRENDER", "TERMINATION", "SATISFACTION", "PARTIAL")
 
-    dated = sorted(((_year(r), r) for r in mortgages if _year(r)), key=lambda t: t[0])
-    latest = dated[-1][1] if dated else None
-    latest_age = None
-    if latest and _year(latest):
-        import datetime
-        latest_age = datetime.date.today().year - _year(latest).year
+    mortgages = [r for r in records if w(r, "MORTGAGE") and not w(r, *FLIP)]
+    # a payoff instrument recorded under the OWNER: an actual discharge, or a
+    # release/satisfaction OF a mortgage (real evidence the loan was paid).
+    discharges = [r for r in records if w(r, "DISCHARGE")
+                  or (w(r, "RELEASE", "SATISFACTION") and w(r, "MORTGAGE"))]
+    deeds_ = [r for r in records if w(r, "DEED") and not w(r, "TRUST")]
+    # a release/discharge/dissolution OF a lien is the opposite of adding one — exclude it
+    liens = [r for r in records if w(r, "LIEN", "ATTACHMENT", "EXECUTION", "LIS")
+             and not w(r, "RELEASE", "DISCHARGE", "DISSOLUTION", "SATISFACTION")]
+    # an Assignment of Lease/Rents is loan collateral, a Surrender/Termination ends a lease
+    # — neither is a lease. Only genuine LEASE / NOTICE / MEMORANDUM instruments count.
+    leases = [r for r in records if w(r, "LEASE") and not w(r, *FLIP)]
+    easements = [r for r in records if w(r, "EASEMENT")]
+
+    import datetime
+    today = datetime.date.today()
+
+    def _newest(items):
+        d = sorted(((_year(r), r) for r in items if _year(r)), key=lambda t: t[0])
+        if not d:
+            return None, None
+        rec = d[-1][1]
+        return rec, today.year - _year(rec).year
+
+    latest, latest_age = _newest(mortgages)
+    latest_lien, lien_age = _newest(liens)
     return {
         "total": len(records),
         "counts": {
@@ -177,6 +196,13 @@ def summarize(records):
                              "lender": latest.get("reverse_party"),
                              "book_page": latest.get("book_page"),
                              "age_years": latest_age} if latest else None),
+        # newest lien + its age: a lien is only a live concern if recent. Federal tax liens
+        # self-release ~10yr; most others resolve within a decade, so an old one is very
+        # likely stale — surfaced so the UI never red-flags a decades-old lien as active.
+        "latest_lien": ({"date": latest_lien.get("date_received"),
+                         "type": latest_lien.get("document_type"),
+                         "party": latest_lien.get("reverse_party"),
+                         "age_years": lien_age} if latest_lien else None),
         "mortgage_dates": [r.get("date_received") for r in mortgages],
         "discharges_found": len(discharges),
         "has_any_lien": bool(liens),

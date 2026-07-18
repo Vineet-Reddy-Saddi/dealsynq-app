@@ -7,7 +7,7 @@
    "mortgages": 3,
    "discharges": 0,
    "liens": 1,
-   "leases": 2,
+   "leases": 1,
    "easements": 0
   },
   "latest_mortgage": {
@@ -15,6 +15,12 @@
    "lender": "REALTY CAPITAL (TR OF)",
    "book_page": "26309-586",
    "age_years": 0
+  },
+  "latest_lien": {
+   "date": "12-19-1991",
+   "type": "Federal Tax Lien",
+   "party": "U S A",
+   "age_years": 35
   },
   "mortgage_dates": [
    "12-09-2004",
