@@ -16,6 +16,7 @@ Open:  http://localhost:8770/
 Stdlib only — no external dependencies.
 """
 import csv
+import datetime
 import json
 import math
 import os
@@ -292,6 +293,7 @@ def search(q):
         "deep": deep,
         "enrichment": enrichment,
         "zoning": resolve_zoning(anchor, assemblage, enrichment, deep),
+        "disposition": disposition_signals(anchor, owner, len(owner_parcels), enrichment, deep),
         "match_count": len(hits),
         # how many OTHER parcels this owner holds that are NOT part of this property (they
         # aren't contiguous) — shown as context, never merged into the assemblage.
@@ -339,6 +341,110 @@ def resolve_zoning(anchor, assemblage, enrichment, deep):
                                    "showing " + z["district_name"] + ", its primary commercial district.")
             return z
     return None
+
+
+# ---- Disposition signals ("likelihood of selling") ----------------------
+# A transparent, source-tagged read of the factors that genuinely correlate with a CRE
+# owner disposing an asset — NOT a probability (a real probability needs a model trained
+# on sale outcomes we don't have). We weight LEADING indicators (hold period, debt maturity,
+# owner posture) over LAGGING ones (vacancy/price cuts, which research shows appear AFTER
+# the decision). Every factor carries its source + confidence; inferred ones say so.
+#
+# Owner posture works for EVERY owner, not just public REITs: SEC covers the handful that
+# are public, but for private owners we read posture from entity type + how many properties
+# they hold in our own parcel index (portfolio footprint). Per the 2026-07 manager note.
+def _owner_posture(owner, parcel_count, deep):
+    name = (owner or "").upper()
+    if deep:
+        return ("Public REIT", "owner is a public REIT (SEC filer) that actively manages and "
+                "prunes its portfolio", "raises", "verified", "SEC EDGAR")
+    if re.search(r"\bLLC\b|\bL L C\b|\bLP\b|\bLLP\b|LIMITED PARTNERSHIP|\bINC\b|CORP|COMPANY", name):
+        if parcel_count >= 6:
+            return ("Active investor", f"investment entity (LLC/LP/Corp) holding {parcel_count} "
+                    "parcels locally — an active property investor", "raises", "strong",
+                    "entity name + our parcel index")
+        return ("Private investor", "investment entity (LLC/LP/Corp) holding "
+                f"{parcel_count} parcel(s) — a private / single-asset investor", "neutral",
+                "strong", "entity name + our parcel index")
+    if re.search(r"CITY OF|COMMONWEALTH|AUTHORITY|HOUSING|CHURCH|COLLEGE|UNIVERSITY|BISHOP|"
+                 r"COMMISSION|DEPARTMENT|DIOCESE|MINISTR", name):
+        return ("Institutional / government", "institutional or government owner — rarely a "
+                "market disposition", "lowers", "strong", "entity name")
+    if re.search(r"\bTRUST\b|\bTR\b|TRUSTEE|\bEST\b|ESTATE", name):
+        return ("Trust / estate", f"held in trust/estate ({parcel_count} parcel(s)) — can "
+                "transition on a life event", "neutral", "moderate", "entity name")
+    if parcel_count <= 1:
+        return ("Owner-occupant / small holder", "individual owner of a single property — "
+                "typically owner-occupied, sells on life events, not opportunistically",
+                "lowers", "moderate", "owner name + our parcel index")
+    return ("Individual landlord", f"individual holding {parcel_count} properties — a small "
+            "private landlord", "neutral", "moderate", "owner name + our parcel index")
+
+
+def _year_of(s):
+    m = re.search(r"(19|20)\d{2}", str(s or ""))
+    return int(m.group(0)) if m else None
+
+
+def disposition_signals(anchor, owner, owner_parcel_count, enrichment, deep):
+    """Leading-indicator disposition read from synchronously-available data (hold period,
+    owner posture, property vintage). Debt maturity, active listing and liens are added
+    client-side once Recorded Documents / Web Research load — see the frontend."""
+    yr = datetime.date.today().year
+    factors = []
+
+    def add(key, label, finding, direction, weight, source, confidence):
+        factors.append({"key": key, "label": label, "finding": finding, "direction": direction,
+                        "weight": weight, "source": source, "confidence": confidence})
+
+    # --- hold period (strongest leading signal we have synchronously) ---
+    sale_date = None
+    if deep:
+        sale_date = ((deep.get("transaction_history") or [{}])[0]).get("date")
+    elif enrichment and enrichment.get("sales"):
+        sale_date = (enrichment["sales"][0] or {}).get("date")
+    hy = (yr - _year_of(sale_date)) if _year_of(sale_date) else None
+    if hy is not None:
+        if hy < 3:
+            add("hold", "Hold period", f"acquired ~{hy} yr ago — early in a typical hold", "lowers", -2, "Assessor / Registry sale date", "verified")
+        elif hy <= 7:
+            add("hold", "Hold period", f"held ~{hy} yrs — mid the typical 5–10 yr hold", "neutral", 0, "Assessor / Registry sale date", "verified")
+        elif hy <= 10:
+            add("hold", "Hold period", f"held ~{hy} yrs — nearing the end of a typical hold", "raises", 1, "Assessor / Registry sale date", "verified")
+        else:
+            add("hold", "Hold period", f"held ~{hy} yrs — well past the 5–10 yr norm (mature phase)", "raises", 2, "Assessor / Registry sale date", "verified")
+
+    # --- owner posture (works for any owner) ---
+    ptype, pdetail, pdir, pconf, psrc = _owner_posture(owner, owner_parcel_count, deep)
+    add("owner", "Owner posture", ptype + " — " + pdetail, pdir,
+        {"raises": 1, "neutral": 0, "lowers": -1}[pdir], psrc, pconf)
+
+    # --- property vintage / capex pressure ---
+    yb = None
+    last_permit = None
+    if not deep and enrichment:
+        yb = ((enrichment.get("buildings") or [{}])[0]).get("year_built")
+        if enrichment.get("permits"):
+            last_permit = (enrichment["permits"][0] or {}).get("date")
+    aby = _year_of(yb)
+    if aby:
+        age = yr - aby
+        permit_recent = bool(_year_of(last_permit) and (yr - _year_of(last_permit) <= 5))
+        if permit_recent:
+            add("vintage", "Property vintage", f"built ~{aby}, permitted/renovated in the last 5 yrs — owner reinvesting", "lowers", -1, "Assessor record card", "verified")
+        elif age >= 40:
+            add("vintage", "Property vintage", f"built ~{aby} (~{age} yrs), no major permit in 5 yrs — reinvest-or-sell pressure", "raises", 1, "Assessor record card", "verified")
+        else:
+            add("vintage", "Property vintage", f"built ~{aby} (~{age} yrs)", "neutral", 0, "Assessor record card", "verified")
+
+    return {
+        "factors": factors,
+        "base_score": sum(f["weight"] for f in factors),
+        # these refine the read once the background sections load (computed client-side)
+        "pending": ["Debt maturity — from Recorded Documents",
+                    "Active for-sale listing — from Deep Web Research",
+                    "Liens / distress — from Recorded Documents"],
+    }
 
 
 SITE_CACHE = {}
@@ -981,6 +1087,27 @@ PAGE = r"""<!doctype html>
     .kpi:hover,.ex:hover,.biz:hover,.sugg:hover,#go:hover,.rbtn:hover{transform:none}
     .spin{animation-duration:1.5s}
   }
+  /* ---- Disposition signals ---- */
+  .disphead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px}
+  .dispband{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:30px;font-weight:800;
+            font-size:11.5px;letter-spacing:.6px;text-transform:uppercase}
+  .dispband::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .dispband.low{background:#E7F5EC;color:#1E7A46}
+  .dispband.mod{background:#FBF3E2;color:#8A5D0F}
+  .dispband.elev{background:#FDE8E8;color:#B3261E}
+  .dispband.market{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#fff}
+  .dispsum{color:var(--slate);font-size:13.5px;margin:8px 0 6px}
+  .dfac{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .dfac:last-child{border-bottom:none}
+  .dfac .arw{flex:none;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;
+             justify-content:center;font-weight:800;font-size:13px}
+  .arw.up{background:#FDE8E8;color:#B3261E}
+  .arw.dn{background:#E7F5EC;color:#1E7A46}
+  .arw.nt{background:var(--mist);color:var(--slate)}
+  .dfac .fl{font-weight:700;color:var(--navy);font-size:13.5px}
+  .dfac .ff{color:var(--slate);font-size:12.5px;margin-top:1px;line-height:1.45}
+  .dfac .fsrc{font-size:10.5px;color:var(--faint);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+  .dpend{background:var(--mist);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--slate);margin-top:12px}
 </style></head><body>
 <div class="hero">
   <div class="kick">DealSynq &bull; Property Intelligence</div>
@@ -1145,6 +1272,10 @@ function render(d){
   // See loadExtras() below.
   h+='<div id="extras"></div>';
 
+  // ---- Disposition signals ("likelihood of selling") — headline read, renders from
+  // synchronous data, then refines when deeds/research background-load. ----
+  if(d.disposition) h+='<div class="card" id="disposition"></div>';
+
   // ---- Zoning (ordinance detail for the property's district) ----
   if(d.zoning) h+=renderZoning(d.zoning);
 
@@ -1256,9 +1387,83 @@ function render(d){
 
   out.innerHTML=h;
   wrapTables(out);
+  window.__disp = d.disposition || null;
+  window.__lastDeeds = null;
+  renderDisposition();
   initDeeds();
   initResearch();
   window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// ---------- Disposition signals ("likelihood of selling") ----------
+// Renders the server's synchronous factors immediately, then augments with debt-maturity,
+// active-listing and lien signals once Recorded Documents / Web Research load. Never a
+// probability — a transparent, source-tagged, leading-indicator read.
+function dispAugmentFactors(){
+  const extra=[];
+  // debt maturity — from the loaded deeds summary
+  const dd=window.__lastDeeds;
+  if(dd&&dd.summary){
+    const lm=dd.summary.latest_mortgage;
+    if(!dd.summary.counts.mortgages){
+      extra.push({key:"debt",label:"Debt",finding:"no mortgage recorded — all-cash / no refinance cliff",direction:"neutral",weight:0,source:"Registry of Deeds",confidence:"verified"});
+    } else if(lm&&lm.age_years!=null){
+      const a=lm.age_years;
+      if(a<=3) extra.push({key:"debt",label:"Debt maturity",finding:"financed ~"+a+" yr ago — recently committed, unlikely to sell short-term",direction:"lowers",weight:-1,source:"Registry of Deeds",confidence:"strong"});
+      else if(a>=5&&a<=11) extra.push({key:"debt",label:"Debt maturity",finding:"mortgage ~"+a+" yrs old — at/near a typical 5–10 yr balloon into the 2025–26 maturity wall: refinance-or-sell pressure",direction:"raises",weight:2,source:"Registry of Deeds (term inferred)",confidence:"inferred"});
+      else extra.push({key:"debt",label:"Debt maturity",finding:"most recent mortgage ~"+a+" yrs old — likely already resolved",direction:"neutral",weight:0,source:"Registry of Deeds",confidence:"strong"});
+    }
+    const ll=dd.summary.latest_lien;
+    if(dd.summary.counts.liens&&ll&&ll.age_years!=null&&ll.age_years<=10)
+      extra.push({key:"distress",label:"Distress",finding:"recent lien ("+(ll.type||"lien")+", "+ll.age_years+" yr old) — possible forced-sale pressure",direction:"raises",weight:1,source:"Registry of Deeds",confidence:"strong"});
+  }
+  // active listing — from the loaded research sources
+  const rs=window.__research;
+  if(rs&&rs.sources){
+    const listers=/loopnet|crexi|cityfeet|showcase|commercialcafe|commercialsearch|catylist|brevitas|ten-x/i;
+    const hit=rs.sources.find(s=>listers.test(s.domain||""));
+    // NB: a bare marketplace URL does NOT confirm a SALE — LoopNet/Crexi list for-lease too.
+    // So this is a flag to verify, weight 0 (it does not by itself move the band).
+    if(hit) extra.push({key:"market",label:"Marketplace listing",finding:"a CRE marketplace page was found ("+hit.domain+") — the property may be actively marketed, for sale or for lease. Verify the listing directly.",direction:"flag",weight:0,source:"Web research (unverified)",confidence:"reported"});
+  }
+  return extra;
+}
+function renderDisposition(){
+  const el=document.getElementById("disposition"); const d=window.__disp;
+  if(!el||!d){ if(el) el.remove(); return; }
+  const factors=(d.factors||[]).concat(dispAugmentFactors());
+  // band reflects the LEADING INDICATORS only (hold / debt / posture / vintage / distress).
+  // A marketplace listing is a weight-0 "flag" shown separately — it must be verified and
+  // must NOT by itself assert the property is on the market.
+  const score=factors.reduce((a,f)=>a+(f.weight||0),0);
+  const listing=factors.find(f=>f.key==="market");
+  let cls,label;
+  if(score>=3){cls="elev";label="Elevated";}
+  else if(score>=1){cls="mod";label="Moderate";}
+  else {cls="low";label="Low";}
+  const drivers=factors.filter(f=>f.direction==="raises").map(f=>f.label.toLowerCase());
+  let h='<div class="disphead"><h3 class="sec" style="margin:0">Disposition Signals '
+    +'<span style="font-size:11px;color:var(--slate);font-weight:600">&bull; likelihood this owner sells</span></h3>'
+    +'<span class="dispband '+cls+'">'+label+'</span></div>';
+  h+='<div class="dispsum">'
+    +(drivers.length?('Signal is <b>'+label.toLowerCase()+'</b>, driven by '+drivers.slice(0,3).join(', ')+'.')
+      :'Signal is <b>'+label.toLowerCase()+'</b>.')
+    +'</div>';
+  // prominent, hedged listing flag (verify) — the single most actionable item when present
+  if(listing) h+='<div class="note" style="margin:2px 0 10px"><b>&#9873; '+esc(listing.finding)+'</b></div>';
+  const arw=d=>d==="raises"?['up','&uarr;']:d==="lowers"?['dn','&darr;']:d==="flag"?['nt','&#9873;']:['nt','&ndash;'];
+  factors.filter(f=>f.key!=="market").forEach(f=>{const a=arw(f.direction);
+    h+='<div class="dfac"><div class="arw '+a[0]+'">'+a[1]+'</div><div><div class="fl">'+esc(f.label)+'</div>'
+      +'<div class="ff">'+esc(f.finding)+'</div>'
+      +'<div class="fsrc">'+esc(f.source||"")+(f.confidence?(' &bull; '+esc(f.confidence)):'')+'</div></div></div>';
+  });
+  // note any pending signals not yet loaded
+  const have=new Set(factors.map(f=>f.key));
+  const pend=[]; if(!have.has("debt")&&!have.has("market")){pend.push("run Recorded Documents & Web Research");}
+  else{ if(!have.has("market")) pend.push("run Deep Web Research for an active-listing check"); if(!have.has("debt")) pend.push("run Recorded Documents for the debt signal"); }
+  if(pend.length) h+='<div class="dpend">More signals available &mdash; '+pend.join('; ')+'.</div>';
+  h+='<div class="cite" style="margin-top:12px"><b>How to read this:</b> a transparent signal from public records, <b>not a probability or investment advice</b>. It weights <b>leading</b> indicators (hold period, debt maturity, owner posture) over <b>lagging</b> ones (vacancy, price cuts). Each factor shows its source and confidence.</div>';
+  el.innerHTML=h;
 }
 
 // ---------- Recorded documents (Registry of Deeds) ----------
@@ -1391,6 +1596,7 @@ function renderDeeds(doc,cached){
     +'Indexed by <b>owner name</b>, so these are documents recorded under &ldquo;'+esc(doc.owner)+'&rdquo; in Hampden County &mdash; for a single-property LLC that is this property’s record; for an individual owner it may span other properties.</div>';
   body.innerHTML=h;
   wrapTables(body);
+  window.__lastDeeds=doc; renderDisposition();   // refine the disposition read with debt/lien
 }
 
 // ---------- Zoning ----------
@@ -1486,6 +1692,7 @@ function renderResearch(doc,cached){
     +'This is a first-pass automated web sweep &mdash; a discovery list of where the data lives, not yet verified or extracted.</div>';
   body.innerHTML=h;
   window.__research=doc;
+  renderDisposition();   // refine the disposition read with an active-listing check
   drawSources("__all");
   document.querySelectorAll("#rchips .rchip").forEach(c=>c.onclick=()=>{
     document.querySelectorAll("#rchips .rchip").forEach(x=>x.classList.remove("on"));
