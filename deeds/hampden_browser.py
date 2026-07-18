@@ -166,9 +166,12 @@ def summarize(records):
     discharges = [r for r in records if w(r, "DISCHARGE")
                   or (w(r, "RELEASE", "SATISFACTION") and w(r, "MORTGAGE"))]
     deeds_ = [r for r in records if w(r, "DEED") and not w(r, "TRUST")]
-    # a release/discharge/dissolution OF a lien is the opposite of adding one — exclude it
+    # A release/discharge/dissolution OF a lien is the opposite of adding one. And a
+    # "Municipal Lien Certificate" is NOT a lien — it's a routine tax-status document
+    # pulled at essentially every MA closing/refinance (issued for clean properties too),
+    # so counting it would red-flag a huge share of normal properties. Exclude both.
     liens = [r for r in records if w(r, "LIEN", "ATTACHMENT", "EXECUTION", "LIS")
-             and not w(r, "RELEASE", "DISCHARGE", "DISSOLUTION", "SATISFACTION")]
+             and not w(r, "RELEASE", "DISCHARGE", "DISSOLUTION", "SATISFACTION", "CERTIFICATE")]
     # an Assignment of Lease/Rents is loan collateral, a Surrender/Termination ends a lease
     # — neither is a lease. Only genuine LEASE / NOTICE / MEMORANDUM instruments count.
     leases = [r for r in records if w(r, "LEASE") and not w(r, *FLIP)]
