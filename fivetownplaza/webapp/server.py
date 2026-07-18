@@ -146,6 +146,8 @@ def load():
                 "zone": (row["ZONE_NAME"] or "").strip(),
                 "neighborhood": (row["NEIHOOD"] or "").strip(),
                 "flood": (row["FLOODZONE"] or "").strip(),
+                "owner_mail": " ".join(x for x in [(row.get("assessor_Owner_Address1") or "").strip(),
+                                                   (row.get("assessor_Owner_Address2") or "").strip()] if x),
                 "bbox": bb,
                 "lat": cen[0] if cen else None,
                 "lon": cen[1] if cen else None,
@@ -281,6 +283,7 @@ def search(q):
         "mode": mode,
         "anchor_address": anchor["address"],
         "owner": owner,
+        "owner_mailing": anchor.get("owner_mail") or "",
         "neighborhood": anchor["neighborhood"],
         "flood_zone": anchor["flood"],
         "assemblage": assemblage,
@@ -1250,7 +1253,7 @@ function render(d){
   const t=d.totals;
   let h='';
   const deep=d.deep;
-  const name = deep ? deep.property_name : (d.owner || "Property");
+  const name = deep ? deep.property_name : (smartTitle(d.owner) || "Property");
   const subtitle = deep ? (deep.anchor_address+"  &bull;  "+deep.property_subtype)
                         : (d.anchor_address+"  &bull;  "+(d.neighborhood||"Springfield, MA"));
   const badge = deep ? '<span class="badge" style="background:var(--verified)">DEEP PROFILE</span>'
@@ -1324,7 +1327,7 @@ function render(d){
     h+='<div class="card note">Parcel + owner + assemblage resolved live. Record-card detail couldn&rsquo;t be fetched right now (the assessor site may be rate-limiting) &mdash; try again in a moment.</div>';
   }
 
-  // ownership (deep)
+  // ownership (deep = rich SEC-confirmed; live = from the assessor owner record)
   if(deep){
     const o=deep.ownership, pc=o.parent_chain;
     h+='<div class="card"><h3 class="sec">Ownership</h3><div class="kv">';
@@ -1333,6 +1336,8 @@ function render(d){
     h+=kv("Mailing",esc(o.current_owner.mailing_address));
     h+=kv("Manager",esc(o.property_manager));
     h+='</div><div class="muted">Confirmed via SEC Exhibit 21.1 (federal filing).</div></div>';
+  } else {
+    h+=renderOwnership(d);
   }
 
   // assemblage table
@@ -1393,6 +1398,48 @@ function render(d){
   initDeeds();
   initResearch();
   window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// ---------- Ownership (live properties — from the assessor owner record) ----------
+function ownerEntity(name){
+  const n=(name||"").toUpperCase();
+  if(/\bLLC\b|\bL L C\b/.test(n)) return ["LLC","Investment entity (LLC)"];
+  if(/\bLP\b|\bLLP\b|LIMITED PARTNERSHIP/.test(n)) return ["LP","Investment entity (LP)"];
+  if(/\bINC\b|CORP|COMPANY/.test(n)) return ["Corp","Corporation"];
+  if(/\bTRUST\b|\bTR\b|TRUSTEE|ESTATE|\bEST\b/.test(n)) return ["Trust","Trust / estate"];
+  if(/CITY OF|COMMONWEALTH|AUTHORITY|HOUSING|CHURCH|COLLEGE|UNIVERSITY|BISHOP|COMMISSION|DIOCESE/.test(n)) return ["Gov/Inst","Institutional / government"];
+  return ["Individual","Individual owner"];
+}
+// title-case that preserves acronyms/codes/state abbreviations (LLC, CVS, RI, A-CSF-27),
+// while properly casing names + street types (MARY LOU -> Mary Lou, ST -> St)
+const _KEEPUP=new Set(("LLC LLP LP PLLC INC CORP CO LTD PC NA USA US DBA CVS TD JP UBS BNY HSBC "
+  +"AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ "
+  +"NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC").split(" "));
+function smartTitle(s){
+  return (s||"").split(/\s+/).map(w=>{
+    if(!w) return w;
+    if(/\d/.test(w)) return w;                                  // codes: 2001, A-CSF-27, 02895
+    const bare=w.replace(/[^A-Za-z]/g,"").toUpperCase();
+    if(_KEEPUP.has(bare)) return w.toUpperCase();               // acronym / state code
+    if(bare.length===1) return w.toUpperCase();                 // initial: E
+    return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();
+  }).join(" ");
+}
+function renderOwnership(d){
+  const ent=ownerEntity(d.owner);
+  let h='<div class="card"><h3 class="sec">Ownership <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; from the Springfield assessor</span></h3><div class="kv">';
+  h+=kv("Owner",esc(smartTitle(d.owner)));
+  h+=kv("Owner type",esc(ent[1]));
+  if(d.owner_mailing) h+=kv("Mailing address",esc(smartTitle(d.owner_mailing)));
+  const total=d.owner_total_parcels||d.totals.parcels, other=d.owner_other_parcels||0, here=d.totals.parcels;
+  let foot=here+' parcel'+(here>1?'s':'')+' at this property';
+  if(other>0) foot+='; owner holds '+total+' in Springfield total ('+other+' elsewhere &mdash; different properties)';
+  h+=kv("Springfield holdings",foot);
+  h+='</div>';
+  if(d.owner_mailing && !/\bMA\b|MASSACHUSETTS/i.test(d.owner_mailing) && /[A-Z]{2}\s*\d{5}/.test(d.owner_mailing.toUpperCase()))
+    h+='<div class="muted">Mailing address is <b>out of state</b> &mdash; an absentee / corporate owner (the entity behind the LLC).</div>';
+  h+='</div>';
+  return h;
 }
 
 // ---------- Disposition signals ("likelihood of selling") ----------
