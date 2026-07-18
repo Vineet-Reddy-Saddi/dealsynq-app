@@ -7,13 +7,14 @@
    "mortgages": 1,
    "discharges": 0,
    "liens": 0,
-   "leases": 1,
+   "leases": 0,
    "easements": 1
   },
   "latest_mortgage": {
    "date": "11-01-2005",
    "lender": "TD BANKNORTH",
-   "book_page": "15461-432"
+   "book_page": "15461-432",
+   "age_years": 21
   },
   "mortgage_dates": [
    "11-01-2005"

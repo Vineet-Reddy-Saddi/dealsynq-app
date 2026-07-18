@@ -13,7 +13,8 @@
   "latest_mortgage": {
    "date": "04-29-2026",
    "lender": "REALTY CAPITAL (TR OF)",
-   "book_page": "26309-586"
+   "book_page": "26309-586",
+   "age_years": 0
   },
   "mortgage_dates": [
    "12-09-2004",

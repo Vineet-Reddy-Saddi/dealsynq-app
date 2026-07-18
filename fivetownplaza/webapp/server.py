@@ -1320,29 +1320,37 @@ function renderDeeds(doc,cached){
   // Recency is the honest signal, not "mortgages minus discharges": a discharge is usually
   // recorded under the LENDER's name, so its absence here is not evidence of open debt.
   const lm=s.latest_mortgage;
-  const lmYear=lm&&lm.date?parseInt(String(lm.date).slice(-4)):null;
-  const recent=lmYear&&((new Date().getFullYear()-lmYear)<=30);
+  // age of the most recent mortgage. Commercial loans typically run 5-10yr terms (balloon),
+  // amortizing over 20-25yr at most, so age is the honest signal of whether it could still
+  // be live. Only a genuinely recent one (<=8yr, within a typical term) warrants attention.
+  let lmAge=(lm&&lm.age_years!=null)?lm.age_years:(lm&&lm.date?(new Date().getFullYear()-parseInt(String(lm.date).slice(-4))):null);
+  const attention=(lmAge!=null&&lmAge<=8);
   let h='<div class="dsum">';
   h+='<div class="dpill"><b>'+s.total+'</b>documents</div>';
   if(c.deeds) h+='<div class="dpill"><b>'+c.deeds+'</b>deeds</div>';
-  h+='<div class="dpill'+(c.mortgages?(recent?" hot":""):" clear")+'"><b>'+c.mortgages+'</b>mortgage'+(c.mortgages==1?"":"s")+'</div>';
+  h+='<div class="dpill'+(c.mortgages?(attention?" hot":""):" clear")+'"><b>'+c.mortgages+'</b>mortgage'+(c.mortgages==1?"":"s")+'</div>';
   if(c.discharges) h+='<div class="dpill"><b>'+c.discharges+'</b>discharges</div>';
   if(c.liens) h+='<div class="dpill hot"><b>'+c.liens+'</b>liens</div>';
-  if(c.leases) h+='<div class="dpill"><b>'+c.leases+'</b>leases</div>';
-  if(c.easements) h+='<div class="dpill"><b>'+c.easements+'</b>easements</div>';
+  if(c.leases) h+='<div class="dpill"><b>'+c.leases+'</b>lease'+(c.leases==1?"":"s")+'</div>';
+  if(c.easements) h+='<div class="dpill"><b>'+c.easements+'</b>easement'+(c.easements==1?"":"s")+'</div>';
   h+='</div>';
   h+='<div class="muted" style="margin:6px 0 12px">';
   if(!c.mortgages){
     h+='<b style="color:var(--verified)">No mortgage recorded under this name.</b>';
   } else {
-    h+='<b style="color:'+(recent?"#B3261E":"var(--slate)")+'">Most recent mortgage: '+esc(lm.date||"")
-      +(lm.lender?(' to '+esc(titlecase(lm.lender))):'')+'</b>'
-      +(recent?' &mdash; recent enough to warrant a payoff check.'
-             :' &mdash; old enough that it is very likely long satisfied.');
+    // age-tiered, honest read — never call a decades-old loan "recent"
+    let tier;
+    if(lmAge==null) tier='';
+    else if(lmAge<=8) tier=' &mdash; <b style="color:#B3261E">within a typical commercial loan term ('+lmAge+' yr'+(lmAge==1?"":"s")+' old)</b>, so it could still be the current financing.';
+    else if(lmAge<=15) tier=' &mdash; <b>'+lmAge+' years old</b>, past a typical 5&ndash;10 yr commercial term, so likely refinanced or paid off.';
+    else if(lmAge<=25) tier=' &mdash; <b>'+lmAge+' years old</b>, very likely long satisfied.';
+    else tier=' &mdash; <b>'+lmAge+' years old</b>, older than any typical loan &mdash; almost certainly satisfied.';
+    h+='<b style="color:'+(attention?"#B3261E":"var(--slate)")+'">Most recent mortgage: '+esc(lm.date||"")
+      +(lm.lender?(' to '+esc(titlecase(lm.lender))):'')+'</b>'+tier;
     if(s.mortgage_dates&&s.mortgage_dates.length>1)
       h+=' All recorded: '+s.mortgage_dates.map(esc).join(', ')+'.';
   }
-  h+=' <span style="color:var(--slate)">Discharges are usually recorded under the <b>lender\'s</b> name, so their absence here is <b>not</b> proof a loan is outstanding &mdash; confirming a payoff means reading the documents.</span></div>';
+  h+=' <span style="color:var(--slate)">A payoff can&rsquo;t be confirmed from a name search &mdash; discharges are usually recorded under the <b>lender&rsquo;s</b> name, so their absence here is <b>not</b> proof a loan is outstanding.</span></div>';
 
   if(doc.records&&doc.records.length){
     h+='<table><tr><th>Recorded</th><th>Document</th><th>Book/Page</th><th>Counterparty</th></tr>';

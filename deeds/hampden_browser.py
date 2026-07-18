@@ -154,11 +154,19 @@ def summarize(records):
     discharges = [r for r in records if has(r, "DISCHARGE")]
     deeds_ = [r for r in records if has(r, "DEED")]
     liens = [r for r in records if has(r, "LIEN", "ATTACHMENT", "EXECUTION")]
-    leases = [r for r in records if has(r, "LEASE")]
+    # An "Assignment of Lease/Rents" is loan collateral (rents pledged to the lender), NOT
+    # a lease — counting it as one overstates a property's leasing. Same for lease
+    # subordinations. Only genuine LEASE / LEASE MEMORANDUM instruments count here.
+    leases = [r for r in records if has(r, "LEASE")
+              and not has(r, "ASSIGNMENT", "SUBORDINAT")]
     easements = [r for r in records if has(r, "EASEMENT")]
 
     dated = sorted(((_year(r), r) for r in mortgages if _year(r)), key=lambda t: t[0])
     latest = dated[-1][1] if dated else None
+    latest_age = None
+    if latest and _year(latest):
+        import datetime
+        latest_age = datetime.date.today().year - _year(latest).year
     return {
         "total": len(records),
         "counts": {
@@ -167,7 +175,8 @@ def summarize(records):
         },
         "latest_mortgage": ({"date": latest.get("date_received"),
                              "lender": latest.get("reverse_party"),
-                             "book_page": latest.get("book_page")} if latest else None),
+                             "book_page": latest.get("book_page"),
+                             "age_years": latest_age} if latest else None),
         "mortgage_dates": [r.get("date_received") for r in mortgages],
         "discharges_found": len(discharges),
         "has_any_lien": bool(liens),
