@@ -10,6 +10,7 @@ with brand / type / cuisine, sorted by distance.
 """
 import json
 import math
+import time
 import urllib.parse
 import urllib.request
 
@@ -23,17 +24,30 @@ OVERPASS_ENDPOINTS = [
 HEADERS = {"User-Agent": "DealSynq-PropertyIntel/1.0"}
 
 
-def overpass_query(q, timeout=6, max_mirrors=2):
+def overpass_query(q, timeout=6, max_mirrors=2, deadline=None):
     """Run an Overpass QL query, rotating across mirrors. Short per-mirror timeout and a
     cap on how many mirrors we try — these are free public servers that are often
     overloaded (slow, not always down), and this call MUST fail fast: it backs a live
-    web request, so a 60s hang here means a stuck page for the user."""
+    web request, so a 60s hang here means a stuck page for the user.
+
+    `deadline`: an absolute time.time() value. When given, this caps EVERY attempt's
+    per-mirror timeout to whatever time remains and stops trying further mirrors once
+    it's passed — the guarantee callers rely on to bound total wall-clock time across
+    a whole call chain (e.g. a narrow query followed by a wider retry), not just one
+    call. Without it, `timeout` is used as a fixed per-mirror budget as before."""
     data = urllib.parse.urlencode({"data": q}).encode()
     last = None
     for endpoint in OVERPASS_ENDPOINTS[:max_mirrors]:
+        call_timeout = timeout
+        if deadline is not None:
+            remaining = deadline - time.time()
+            if remaining <= 0.3:   # not enough time left for a meaningful attempt
+                last = last or "deadline exceeded before this mirror"
+                break
+            call_timeout = min(timeout, remaining)
         try:
             req = urllib.request.Request(endpoint, data=data, headers=HEADERS)
-            with urllib.request.urlopen(req, timeout=timeout) as r:
+            with urllib.request.urlopen(req, timeout=call_timeout) as r:
                 return json.loads(r.read().decode("utf-8", "ignore"))
         except Exception as e:
             last = e
@@ -50,12 +64,13 @@ def _haversine(lat1, lon1, lat2, lon2):
     return 2 * r * math.asin(math.sqrt(a))
 
 
-def find_businesses(lat, lon, radius=70, limit=15, timeout=6, max_mirrors=4):
+def find_businesses(lat, lon, radius=70, limit=15, timeout=6, max_mirrors=4, deadline=None):
     """Return [{name, type, brand, cuisine, distance_m}] for named POIs within `radius` m.
     `timeout` is the HTTP request budget (per mirror) — kept short so a slow/overloaded
     public Overpass server fails fast instead of hanging the caller. `max_mirrors` is how
     many of the public mirrors to try before giving up; these are free, frequently
-    overloaded servers, so trying all of them materially improves the hit rate."""
+    overloaded servers, so trying all of them materially improves the hit rate.
+    `deadline`: see overpass_query — bounds total time across mirrors."""
     q = f"""[out:json][timeout:5];
 (
   nwr(around:{radius},{lat},{lon})[name][shop];
@@ -64,7 +79,7 @@ def find_businesses(lat, lon, radius=70, limit=15, timeout=6, max_mirrors=4):
   nwr(around:{radius},{lat},{lon})[name][leisure~"fitness_centre|sports_centre|bowling_alley"];
 );
 out center tags {limit * 4};"""
-    d = overpass_query(q, timeout=timeout, max_mirrors=max_mirrors)
+    d = overpass_query(q, timeout=timeout, max_mirrors=max_mirrors, deadline=deadline)
 
     out, seen = [], set()
     for e in d.get("elements", []):

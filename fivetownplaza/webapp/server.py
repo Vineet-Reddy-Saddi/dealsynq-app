@@ -275,14 +275,14 @@ SITE_CACHE = {}
 BIZ_CACHE = {}
 
 
-def site_at(apn, lat, lon, land_sqft, building_sqft, stories):
+def site_at(apn, lat, lon, land_sqft, building_sqft, stories, deadline=None):
     """OSM footprint + aerial-derived metrics. Cached; failures are NOT cached (so a
     slow/overloaded Overpass mirror gets retried next time, not stuck permanently)."""
     if apn in SITE_CACHE:
         return SITE_CACHE[apn]
     try:
-        res = site_metrics(lat, lon, land_sqft=land_sqft,
-                           assessor_building_sqft=building_sqft, stories=stories)
+        res = site_metrics(lat, lon, land_sqft=land_sqft, assessor_building_sqft=building_sqft,
+                           stories=stories, deadline=deadline)
     except Exception as e:
         print(f"  [site {apn}] failed/slow: {e}")
         return None
@@ -290,21 +290,30 @@ def site_at(apn, lat, lon, land_sqft, building_sqft, stories):
     return res
 
 
-def businesses_at(apn, lat, lon, land_sqft):
+def businesses_at(apn, lat, lon, land_sqft, deadline=None):
     """Named businesses operating at/near this parcel (OSM). Cached; failures are not.
 
     OSM is volunteer-mapped, so plenty of parcels have nothing on them. When the tight
     (on-parcel) radius comes back empty we widen once to catch the immediate surroundings —
     each result carries distance_m, so the page can be honest about what's actually ON the
-    parcel versus merely nearby."""
+    parcel versus merely nearby.
+
+    This can mean TWO sequential multi-mirror Overpass round-trips (narrow, then widen).
+    `deadline` (an absolute time.time() value, shared with the sibling site_at() call) is
+    threaded through both so their combined time is bounded by ONE wall-clock budget —
+    without it, narrow+widen could each independently retry every mirror and blow far past
+    whatever the caller intended to wait (this previously caused this lookup to reliably
+    time out on a slower/cloud host while the sibling footprint call, a single round-trip,
+    finished fine)."""
     if apn in BIZ_CACHE:
         return BIZ_CACHE[apn]
     try:
         # scale search radius to parcel size (small pad/house = tight; big plaza = wide)
         radius = 60 if land_sqft < 20000 else 100 if land_sqft < 80000 else 170
-        res = find_businesses(lat, lon, radius=radius)
-        if not res:
-            res = find_businesses(lat, lon, radius=300, timeout=7)  # widen once
+        res = find_businesses(lat, lon, radius=radius, deadline=deadline)
+        # only attempt the wider retry if there's meaningful time left on the SAME deadline
+        if not res and (deadline is None or (deadline - time.time()) > 1.5):
+            res = find_businesses(lat, lon, radius=300, timeout=7, deadline=deadline)  # widen once
             for r in res:      # flag these: they are NEAR the parcel, not on it
                 r["widened"] = True
     except Exception as e:
@@ -538,15 +547,17 @@ class Handler(BaseHTTPRequestHandler):
             land_sqft = float(qs.get("land_sqft", ["0"])[0])
             building_sqft = float(qs.get("building_sqft", ["0"])[0])
             stories = qs.get("stories", [None])[0]
-            # Both OSM lookups run in PARALLEL under a HARD server-side deadline. On some
-            # hosts (a cloud datacenter IP) Overpass responds very slowly or hangs in a way
-            # its own socket timeout doesn't catch, which used to make this endpoint block
-            # for 60s+. We bound the whole thing to ~8s and shutdown(wait=False) so a hung
-            # OSM thread can never hold up the response; the frontend treats null as "no data".
+            # Both OSM lookups run in PARALLEL under ONE shared, absolute deadline, passed
+            # into each so their own internal retries (mirror rotation, and businesses_at's
+            # narrow-then-widen sequence) self-bound to it rather than each independently
+            # retrying and blowing past whatever time we can actually afford. On some hosts
+            # (a cloud datacenter IP) Overpass responds slowly, which used to make this
+            # endpoint block 60s+ before this fix. shutdown(wait=False) means even if a
+            # request somehow still overruns, it can never hold up the HTTP response.
+            deadline = time.time() + 12.0   # client-side abort is 14s — 2s margin for transit
             ex = ThreadPoolExecutor(max_workers=2)
-            f_biz = ex.submit(businesses_at, apn, lat, lon, land_sqft)
-            f_site = ex.submit(site_at, apn, lat, lon, land_sqft, building_sqft, stories)
-            deadline = time.time() + 8.0
+            f_biz = ex.submit(businesses_at, apn, lat, lon, land_sqft, deadline)
+            f_site = ex.submit(site_at, apn, lat, lon, land_sqft, building_sqft, stories, deadline)
 
             def _bounded(fut):
                 try:

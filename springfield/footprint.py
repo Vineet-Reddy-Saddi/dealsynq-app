@@ -37,13 +37,15 @@ def _poly_area_sqm(coords):
     return abs(area) / 2.0
 
 
-def footprint(lat, lon, radius=45):
+def footprint(lat, lon, radius=45, deadline=None):
     """Sum of OSM building-polygon areas near the point + any levels/height tags.
-    Fails fast (short HTTP timeout) rather than hanging — see overpass_query."""
+    Fails fast (short HTTP timeout) rather than hanging — see overpass_query.
+    `deadline`: absolute time.time() value shared with a sibling call (e.g. businesses),
+    so this and other OSM lookups fired in parallel split one wall-clock budget."""
     q = f"""[out:json][timeout:5];
 (way(around:{radius},{lat},{lon})[building];);
 out geom tags;"""
-    d = overpass_query(q, timeout=6)
+    d = overpass_query(q, timeout=6, deadline=deadline)
     total_sqm, n, levels, height_m = 0.0, 0, None, None
     for el in d.get("elements", []):
         geom = el.get("geometry")
@@ -75,7 +77,7 @@ out geom tags;"""
     }
 
 
-def site_metrics(lat, lon, land_sqft=0, assessor_building_sqft=0, stories=None):
+def site_metrics(lat, lon, land_sqft=0, assessor_building_sqft=0, stories=None, deadline=None):
     """Footprint (OSM) + derived roof / height / parking / solar / FAR estimates."""
     # scale the footprint search radius to parcel size (a big plaza's buildings can sit
     # 100m+ from the parcel centroid; a house's footprint is right at the point)
@@ -86,7 +88,7 @@ def site_metrics(lat, lon, land_sqft=0, assessor_building_sqft=0, stories=None):
         radius = 45
     fp = None
     try:
-        fp = footprint(lat, lon, radius=radius)
+        fp = footprint(lat, lon, radius=radius, deadline=deadline)
     except Exception:
         fp = None
 
