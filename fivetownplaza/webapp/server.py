@@ -17,6 +17,7 @@ Stdlib only — no external dependencies.
 """
 import csv
 import json
+import math
 import os
 import re
 import sys
@@ -57,17 +58,33 @@ BY_OWNER = {}
 _COORD = re.compile(r"-?\d{1,3}\.\d+")
 
 
-def _centroid(geojson):
-    """Cheap approximate centroid: average of all lon/lat vertex pairs (good enough for
-    a ~70m POI radius query). Returns (lat, lon) or None."""
+def _coords(geojson):
+    """Parse a parcel's geometry into (lats, lons) vertex lists, or (None, None)."""
     nums = _COORD.findall(geojson or "")
     if len(nums) < 2:
-        return None
+        return None, None
     lons = [float(nums[i]) for i in range(0, len(nums) - 1, 2)]
     lats = [float(nums[i]) for i in range(1, len(nums), 2)]
     if not lons or not lats:
+        return None, None
+    return lats, lons
+
+
+def _centroid(geojson):
+    """Cheap approximate centroid: average of all lon/lat vertex pairs. Returns (lat, lon)."""
+    lats, lons = _coords(geojson)
+    if not lats:
         return None
     return (sum(lats) / len(lats), sum(lons) / len(lons))
+
+
+def _bbox(geojson):
+    """Axis-aligned bounding box (min_lat, min_lon, max_lat, max_lon) of a parcel, or None.
+    Four floats — the cheap footprint we use for adjacency clustering (see assemblage_cluster)."""
+    lats, lons = _coords(geojson)
+    if not lats:
+        return None
+    return (min(lats), min(lons), max(lats), max(lons))
 
 
 def _num(s):
@@ -114,7 +131,10 @@ def load():
     with open(CSV_PATH, encoding="utf-8", errors="ignore") as f:
         for row in csv.DictReader(f):
             addr = (row["assessor_Parcel_Address"] or "").strip()
-            cen = _centroid(row.get("geometry_geojson", ""))
+            gj = row.get("geometry_geojson", "")
+            lats, lons = _coords(gj)
+            cen = (sum(lats) / len(lats), sum(lons) / len(lons)) if lats else None
+            bb = (min(lats), min(lons), max(lats), max(lons)) if lats else None
             rec = {
                 "apn": row["assessor_Parcel_Number"],
                 "address": addr,
@@ -125,6 +145,7 @@ def load():
                 "zone": (row["ZONE_NAME"] or "").strip(),
                 "neighborhood": (row["NEIHOOD"] or "").strip(),
                 "flood": (row["FLOODZONE"] or "").strip(),
+                "bbox": bb,
                 "lat": cen[0] if cen else None,
                 "lon": cen[1] if cen else None,
             }
@@ -137,6 +158,47 @@ PROFILE = {}
 if os.path.exists(PROFILE_PATH):
     PROFILE = json.load(open(PROFILE_PATH, encoding="utf-8"))
 DEEP_OWNER = (PROFILE.get("ownership", {}).get("current_owner", {}).get("name", "") or "").upper()
+
+
+# ---- Parcel assemblage (contiguity, not just same owner) ----------------
+def _bbox_adjacent(a, b, gap_lat, gap_lon):
+    """True if two parcel bounding boxes (min_lat,min_lon,max_lat,max_lon), each expanded
+    by the gap, overlap — i.e. the parcels touch or nearly touch."""
+    return ((a[0] - gap_lat) <= b[2] and (a[2] + gap_lat) >= b[0] and
+            (a[1] - gap_lon) <= b[3] and (a[3] + gap_lon) >= b[1])
+
+
+def assemblage_cluster(anchor, owner_parcels, gap_m=12.0):
+    """The actual PROPERTY = the anchor plus every same-owner parcel that is CONTIGUOUS
+    with it (a connected cluster of touching bounding boxes), not everything the owner
+    happens to hold.
+
+    Same owner != same property. A landlord's scattered lots, or the City's ~800 parcels,
+    must not merge into one assemblage just because they share an owner name. Validated on
+    real data: this keeps Five Town Plaza's 9 contiguous parcels whole while reducing
+    scattered owners (DNEPRO, City of Springfield, ...) to just the searched parcel's true
+    neighbours.
+
+    A parcel with no usable geometry can't be adjacency-tested, so a lone anchor comes back
+    as a 1-parcel property — the correct, conservative answer."""
+    ps = [p for p in owner_parcels if p.get("bbox")]
+    if not anchor.get("bbox"):
+        return [anchor]
+    lat0 = anchor["bbox"][0]
+    gap_lat = gap_m / 111320.0
+    gap_lon = gap_m / (111320.0 * max(0.15, math.cos(math.radians(lat0))))
+    by_apn = {p["apn"]: p for p in ps}
+    by_apn.setdefault(anchor["apn"], anchor)   # ensure the anchor is in the pool
+    pool = list(by_apn.values())
+    seen = {anchor["apn"]}
+    stack = [anchor]
+    while stack:
+        cur = stack.pop()
+        for p in pool:
+            if p["apn"] not in seen and _bbox_adjacent(cur["bbox"], p["bbox"], gap_lat, gap_lon):
+                seen.add(p["apn"])
+                stack.append(p)
+    return [by_apn[a] for a in seen]
 
 
 # ---- Search --------------------------------------------------------------
@@ -185,8 +247,12 @@ def search(q):
     # pick the highest-assessed matching parcel as the anchor, resolve its owner
     anchor = max(hits, key=lambda p: p["assessed"])
     owner = anchor["owner"]
-    assemblage = sorted(BY_OWNER.get(owner.upper(), [anchor]),
+    # the assemblage is the CONTIGUOUS cluster around the anchor, not every parcel the
+    # owner holds (same owner != same property — see assemblage_cluster).
+    owner_parcels = BY_OWNER.get(owner.upper(), [anchor])
+    assemblage = sorted(assemblage_cluster(anchor, owner_parcels),
                         key=lambda p: p["assessed"], reverse=True)
+    owner_other_parcels = max(0, len(owner_parcels) - len(assemblage))
 
     total_val = sum(p["assessed"] for p in assemblage)
     total_land = sum(p["land_sqft"] for p in assemblage)
@@ -227,6 +293,10 @@ def search(q):
         "enrichment": enrichment,
         "zoning": resolve_zoning(anchor, assemblage, enrichment, deep),
         "match_count": len(hits),
+        # how many OTHER parcels this owner holds that are NOT part of this property (they
+        # aren't contiguous) — shown as context, never merged into the assemblage.
+        "owner_other_parcels": owner_other_parcels,
+        "owner_total_parcels": len(owner_parcels),
         # coordinates + building sqft/stories so the frontend can call /api/extra itself
         "extra_params": {
             "apn": anchor["apn"], "lat": anchor["lat"], "lon": anchor["lon"],
@@ -1132,9 +1202,18 @@ function render(d){
   }
 
   // assemblage table
-  h+='<div class="card"><h3 class="sec">Parcel Assemblage ('+t.parcels+')</h3><table><tr><th>APN</th><th>Address</th><th class="num">Land SF</th><th class="num">Assessed</th><th>Zone</th></tr>';
+  const asN=t.parcels;
+  h+='<div class="card"><h3 class="sec">Parcel Assemblage ('+asN+')</h3>';
+  h+='<div class="muted" style="margin:-4px 0 12px">'+(asN>1
+      ? asN+' <b>contiguous</b> parcels under one owner &mdash; grouped by adjacency, so this is the actual property.'
+      : 'A single parcel &mdash; no other parcel owned by this entity is contiguous with it.')+'</div>';
+  h+='<table><tr><th>APN</th><th>Address</th><th class="num">Land SF</th><th class="num">Assessed</th><th>Zone</th></tr>';
   d.assemblage.forEach(p=>{h+='<tr><td>'+p.apn+'</td><td>'+esc(titlecase(p.address))+'</td><td class="num">'+Math.round(p.land_sqft).toLocaleString()+'</td><td class="num">'+money(p.assessed)+'</td><td>'+esc(p.zone)+'</td></tr>';});
-  h+='<tr class="tot"><td colspan="2">TOTAL &mdash; '+t.parcels+' parcels</td><td class="num">'+Math.round(t.land_sqft).toLocaleString()+'</td><td class="num">'+money(t.assessed)+'</td><td></td></tr></table></div>';
+  h+='<tr class="tot"><td colspan="2">TOTAL &mdash; '+asN+' parcel'+(asN>1?'s':'')+'</td><td class="num">'+Math.round(t.land_sqft).toLocaleString()+'</td><td class="num">'+money(t.assessed)+'</td><td></td></tr></table>';
+  if(d.owner_other_parcels>0){
+    h+='<div class="note" style="margin-top:12px"><b>'+esc(titlecase(d.owner))+'</b> separately owns <b>'+d.owner_other_parcels+'</b> other parcel'+(d.owner_other_parcels>1?'s':'')+' elsewhere in Springfield ('+d.owner_total_parcels+' total). Those are <b>different properties</b> &mdash; not part of this assemblage &mdash; because they aren&rsquo;t contiguous with it.</div>';
+  }
+  h+='</div>';
 
   // deep: transactions + tenants + confidence
   if(deep){
