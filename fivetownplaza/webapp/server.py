@@ -1370,7 +1370,10 @@ function renderDeeds(doc,cached){
 
   if(doc.records&&doc.records.length){
     h+='<table><tr><th>Recorded</th><th>Document</th><th>Book/Page</th><th>Counterparty</th></tr>';
-    doc.records.forEach(r=>{
+    // newest first — parse MM-DD-YYYY into a sortable YYYYMMDD key; undated rows sink last
+    const dkey=s=>{const m=/(\d{2})-(\d{2})-(\d{4})/.exec(s||"");return m?(+m[3])*10000+(+m[1])*100+(+m[2]):-1;};
+    const rows=doc.records.slice().sort((a,b)=>dkey(b.date_received)-dkey(a.date_received));
+    rows.forEach(r=>{
       const role=r.party_role==="grantee"?"&larr;":"&rarr;";
       // NB: keep the em-dash entity OUT of esc()/titlecase() — they'd mangle it to "&Mdash;"
       const party=r.reverse_party ? esc(titlecase(r.reverse_party)) : "&mdash;";
