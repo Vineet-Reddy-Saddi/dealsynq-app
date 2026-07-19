@@ -34,6 +34,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, ROOT)
 from springfield.record_card import fetch_parcel  # noqa: E402  live per-parcel enrichment
 from springfield.businesses import find_businesses  # noqa: E402  OSM business/tenant lookup
+from springfield.yelp import find_businesses_yelp  # noqa: E402  Yelp business lookup (primary)
 from springfield.footprint import site_metrics  # noqa: E402  OSM footprint + aerial estimates
 from research.keyword_crawler import crawl as research_crawl, generate_queries, load_proxies  # noqa: E402
 from springfield.zoning import lookup as zoning_lookup  # noqa: E402  ordinance detail per zoning code
@@ -703,25 +704,30 @@ def find_parcel_at_point(lat, lon):
 
 
 def businesses_at(apn, lat, lon, land_sqft, deadline=None):
-    """Named businesses operating at/near this parcel (OSM). Cached; failures are not.
+    """Named businesses operating at/near this parcel. Cached; failures are not.
 
-    OSM is volunteer-mapped, so plenty of parcels have nothing on them. Classification of
-    "on this parcel" vs. "merely nearby" uses the assemblage's REAL polygon shape when
-    available (point-in-polygon, not just a fixed-radius circle from the centroid) — a
-    blind radius sweeps in unrelated standalone businesses across the street for a large
-    commercial parcel (verified: at a 7.88-acre parcel, several OSM hits within the old
-    170m radius were genuinely outside the parcel boundary — a gas station, a nail salon
-    on a different lot, correctly excluded once the real shape is used instead of a
-    bounding-box guess). Falls back to a buffered bbox, then the old radius-only "widened"
-    flag, when a usable polygon isn't available.
+    PRIMARY source: Yelp Fusion (real listings, kept current by the businesses themselves —
+    only used if YELP_API_KEY is configured; see springfield/yelp.py). FALLBACK: OpenStreetMap
+    Overpass (free, no key, but volunteer-mapped and often sparse for small multi-tenant
+    buildings — see springfield/businesses.py). The fallback only fires when Yelp is
+    unconfigured or its call itself fails; a Yelp call that succeeds with zero results is
+    trusted as real information (Yelp found genuinely nothing nearby), not treated as a
+    failure to fall back from. The returned dict's "source" field tells the caller which one
+    actually answered, so the UI can label it honestly instead of always saying OSM.
 
-    This can mean TWO sequential multi-mirror Overpass round-trips (narrow, then widen).
-    `deadline` (an absolute time.time() value, shared with the sibling site_at() call) is
-    threaded through both so their combined time is bounded by ONE wall-clock budget —
-    without it, narrow+widen could each independently retry every mirror and blow far past
-    whatever the caller intended to wait (this previously caused this lookup to reliably
-    time out on a slower/cloud host while the sibling footprint call, a single round-trip,
-    finished fine)."""
+    Classification of "on this parcel" vs. "merely nearby" uses the assemblage's REAL polygon
+    shape when available (point-in-polygon, not just a fixed-radius circle from the centroid)
+    — a blind radius sweeps in unrelated standalone businesses across the street for a large
+    commercial parcel (verified: at a 7.88-acre parcel, several hits within the old 170m
+    radius were genuinely outside the parcel boundary — correctly excluded once the real
+    shape is used instead of a bounding-box guess). Falls back to a buffered bbox when no
+    usable polygon is available.
+
+    `deadline` (an absolute time.time() value, shared with the sibling site_at() call) bounds
+    the OSM path's narrow-then-widen retries to ONE wall-clock budget across both calls —
+    without it, they could each independently retry every mirror and blow far past whatever
+    the caller intended to wait (this previously caused this lookup to reliably time out on a
+    slower/cloud host while the sibling footprint call, a single round-trip, finished fine)."""
     if apn in BIZ_CACHE:
         return BIZ_CACHE[apn]
     bbox, assemblage = None, []
@@ -730,31 +736,45 @@ def businesses_at(apn, lat, lon, land_sqft, deadline=None):
         owner_parcels = BY_OWNER.get(anchor["owner"].upper(), [anchor])
         assemblage = assemblage_cluster(anchor, owner_parcels)
         bbox = _bbox_union(assemblage)
+    # scale search radius to parcel size (small pad/house = tight; big plaza = wide)
+    radius = 60 if land_sqft < 20000 else 100 if land_sqft < 80000 else 170
+    if bbox:
+        # make sure the query circle fully covers the real boundary + a margin, even
+        # if the given lat/lon sits off-center relative to the assemblage's true extent
+        corners = ((bbox[0], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[1]), (bbox[2], bbox[3]))
+        corner_d = max(_deg_dist_m(lat, lon, c[0], c[1]) for c in corners)
+        radius = max(radius, min(400, round(corner_d) + 40))
+
+    res, source = None, None
     try:
-        # scale search radius to parcel size (small pad/house = tight; big plaza = wide)
-        radius = 60 if land_sqft < 20000 else 100 if land_sqft < 80000 else 170
-        if bbox:
-            # make sure the query circle fully covers the real boundary + a margin, even
-            # if the given lat/lon sits off-center relative to the assemblage's true extent
-            corners = ((bbox[0], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[1]), (bbox[2], bbox[3]))
-            corner_d = max(_deg_dist_m(lat, lon, c[0], c[1]) for c in corners)
-            radius = max(radius, min(400, round(corner_d) + 40))
-        res = find_businesses(lat, lon, radius=radius, deadline=deadline)
-        # only attempt the wider retry if there's meaningful time left on the SAME deadline
-        if not res and (deadline is None or (deadline - time.time()) > 1.5):
-            res = find_businesses(lat, lon, radius=300, timeout=7, deadline=deadline)  # widen once
-            for r in res:      # flag these: they are NEAR the parcel, not on it
-                r["widened"] = True
-        # classify against the REAL boundary when we have one — overrides the coarse
-        # radius-implied flag above with an actual on/off-parcel determination.
-        if assemblage:
-            for r in res:
-                inside = _on_parcel(r.get("lat"), r.get("lon"), assemblage, bbox)
-                if inside is not None:
-                    r["widened"] = not inside
+        yelp_res = find_businesses_yelp(lat, lon, radius=radius)
+        if yelp_res is not None:      # None = unconfigured/failed; [] = genuinely nothing nearby
+            res, source = yelp_res, "yelp"
     except Exception as e:
-        print(f"  [businesses {apn}] failed/slow: {e}")
-        return None
+        print(f"  [businesses-yelp {apn}] failed: {e}")
+
+    if res is None:
+        try:
+            res = find_businesses(lat, lon, radius=radius, deadline=deadline)
+            source = "osm"
+            # only attempt the wider retry if there's meaningful time left on the SAME deadline
+            if not res and (deadline is None or (deadline - time.time()) > 1.5):
+                res = find_businesses(lat, lon, radius=300, timeout=7, deadline=deadline)  # widen once
+                for r in res:      # flag these: they are NEAR the parcel, not on it
+                    r["widened"] = True
+        except Exception as e:
+            print(f"  [businesses-osm {apn}] failed/slow: {e}")
+            return None
+
+    # classify against the REAL boundary when we have one — overrides any coarse
+    # radius-implied flag above with an actual on/off-parcel determination. Applies to
+    # either source, since both return the same {lat, lon, ...} shape.
+    if assemblage:
+        for r in res:
+            inside = _on_parcel(r.get("lat"), r.get("lon"), assemblage, bbox)
+            if inside is not None:
+                r["widened"] = not inside
+    res = {"source": source, "items": res}
     BIZ_CACHE[apn] = res
     return res
 
@@ -1476,14 +1496,21 @@ async function run(){
   if(d.extra_params) loadExtras(d.extra_params, gen);  // fire-and-forget, background, never blocks
 }
 
-function renderExtraCards(biz,st){
+function renderExtraCards(bizResult,st){
   let h='';
+  // bizResult is {source:"yelp"|"osm", items:[...]} from the server, or null on failure —
+  // source tells us which one actually answered so the label/caveats are honest either way.
+  const biz = bizResult ? bizResult.items : null;
+  const source = bizResult ? bizResult.source : null;
+  const isYelp = source==="yelp";
+  const srcLabel = isYelp ? "live from Yelp" : "live from OpenStreetMap";
   // ALWAYS render this section, for every address. An empty result is information too —
   // silently hiding the card just looks broken.
-  h+='<div class="card"><h3 class="sec">Businesses Operating Here <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; live from OpenStreetMap</span></h3>';
+  h+='<div class="card"><h3 class="sec">Businesses Operating Here <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; '+srcLabel+'</span></h3>';
   if(biz&&biz.length){
-    // the server flags results that only turned up after widening the search — those are
-    // NEAR the parcel, not on it. Never claim a neighbour is a tenant.
+    // the server flags results that only turned up after widening the search (OSM path) or
+    // fell outside the real parcel boundary (either source) — those are NEAR the parcel,
+    // not on it. Never claim a neighbour is a tenant.
     const onParcel=biz.filter(x=>!x.widened);
     const shown=onParcel.length?onParcel:biz;
     h+='<div class="bizwrap">';
@@ -1497,13 +1524,20 @@ function renderExtraCards(biz,st){
       h+='<div class="biz"><b>'+esc(x.name)+'</b><span>'+esc(sub+dist)+'</span></div>';
     });
     h+='</div>';
-    h+= onParcel.length
-      ? '<div class="muted"><b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.</div>'
-      : '<div class="muted"><b>Nothing is mapped on this parcel itself</b> &mdash; these are the nearest mapped businesses (see distances). OpenStreetMap is volunteer-mapped, so smaller tenants are often missing.</div>';
-  } else if(biz){   // reached OSM, genuinely nothing nearby
-    h+='<div class="note">No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>. A paid source (e.g. Google Places) would cover more.</div>';
+    if(onParcel.length){
+      h+= isYelp
+        ? '<div class="muted"><b>Businesses listed at this location</b> on Yelp &mdash; kept current by the businesses themselves (open/closed status, category), meaningfully more reliable than volunteer-mapped data. Still worth a quick verify for anything time-sensitive.</div>'
+        : '<div class="muted"><b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.</div>';
+    } else {
+      h+= '<div class="muted"><b>Nothing is '+(isYelp?"listed":"mapped")+' on this parcel itself</b> &mdash; these are the nearest '+(isYelp?"Yelp-listed":"mapped")+' businesses (see distances).'
+        +(isYelp?'':' OpenStreetMap is volunteer-mapped, so smaller tenants are often missing.')+'</div>';
+    }
+  } else if(biz){   // reached the source, genuinely nothing nearby
+    h+= isYelp
+      ? '<div class="note">No businesses are listed at or near this parcel on Yelp &mdash; likely a residential property, vacant lot, or a business too new/small to be listed yet. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.</div>'
+      : '<div class="note">No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>.</div>';
   } else {          // null = the lookup failed / timed out
-    h+='<div class="note">Couldn&rsquo;t reach OpenStreetMap just now &mdash; its public servers are frequently overloaded. This is a <b>lookup failure, not a finding</b>; try the search again in a moment.</div>';
+    h+='<div class="note">Couldn&rsquo;t reach '+(isYelp?"Yelp":"OpenStreetMap")+' just now &mdash; try the search again in a moment. This is a <b>lookup failure, not a finding</b>.</div>';
   }
   h+='</div>';
   if(st&&st.footprint_sqft){
