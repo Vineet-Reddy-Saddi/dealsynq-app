@@ -16,6 +16,7 @@ instead of showing nothing.
 """
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -42,7 +43,18 @@ def find_businesses_foursquare(lat, lon, radius=70, limit=15, timeout=6):
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             data = json.loads(r.read().decode("utf-8", "ignore"))
-    except Exception:
+    except urllib.error.HTTPError as e:
+        # log the actual reason (bad key, wrong plan, bad params, etc.) — silently returning
+        # None here previously made every failure indistinguishable and unfixable from the
+        # logs, always just masked by the OSM fallback.
+        try:
+            body = e.read().decode("utf-8", "ignore")[:500]
+        except Exception:
+            body = ""
+        print(f"  [foursquare] HTTP {e.code}: {body}")
+        return None
+    except Exception as e:
+        print(f"  [foursquare] request failed: {e}")
         return None
 
     # be defensive about the exact envelope shape (a top-level "results" list vs. the list
