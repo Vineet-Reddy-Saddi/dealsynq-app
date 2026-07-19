@@ -95,30 +95,42 @@ def _num(s):
         return 0.0
 
 
-# Canonicalize street-type words so "Street"/"St."/"ST" all match, etc.
+# Canonicalize the trailing street-TYPE word so "Street"/"St."/"ST" all match. Applied
+# ONLY to the last token (the actual suffix) so a street NAMED "Court"/"Park"/"Way" isn't
+# mangled (e.g. "36 Court St" must NOT become "36 CT ST").
 SUFFIX = {
     "STREET": "ST", "STR": "ST", "AVENUE": "AVE", "AV": "AVE", "ROAD": "RD",
-    "DRIVE": "DR", "DRV": "DR", "LANE": "LN", "COURT": "CT", "PLACE": "PL",
-    "BOULEVARD": "BLVD", "BLVD": "BLVD", "CIRCLE": "CIR", "TERRACE": "TER", "TERR": "TER",
+    "DRIVE": "DR", "DRV": "DR", "LANE": "LN", "COURT": "CT", "CRT": "CT", "PLACE": "PL",
+    "BOULEVARD": "BLVD", "CIRCLE": "CIR", "TERRACE": "TER", "TERR": "TER",
     "HIGHWAY": "HWY", "PARKWAY": "PKWY", "SQUARE": "SQ", "TRAIL": "TRL",
-    "NORTH": "N", "SOUTH": "S", "EAST": "E", "WEST": "W",
+    "WAY": "WAY", "WY": "WAY",
 }
+_DIR = {"NORTH": "N", "SOUTH": "S", "EAST": "E", "WEST": "W"}
 _STRIP = re.compile(r"\b(SPRINGFIELD|MASSACHUSETTS|MASS|MA|USA)\b")
 # unit / suite / apt / floor designators — strip these and whatever follows them
 _UNIT = re.compile(r"\b(UNIT|STE|SUITE|APT|APARTMENT|FL|FLR|FLOOR|BLDG|BUILDING|RM|ROOM|LOT|NO)\b\.?\s*[A-Z0-9-]*")
+_ZIP = re.compile(r"\b(\d{5})(?:-\d{4})?\b")
 
 
 def normalize_addr(s):
-    """Normalize an address so typos of format all collapse to one canonical string:
-    uppercase, drop punctuation, strip city/state/zip AND unit/suite, canonical suffixes."""
+    """Normalize an address to one canonical string: uppercase, drop punctuation, strip
+    city/state/zip and unit/suite, canonicalize the trailing street suffix + leading dir."""
     s = (s or "").upper()
     s = re.sub(r"[.,]", " ", s)
     s = re.sub(r"#\s*[A-Z0-9-]+", " ", s)   # "#820"
     s = _UNIT.sub(" ", s)                    # "UNIT 820", "STE 100", ...
     s = _STRIP.sub(" ", s)
     toks = [t for t in s.split() if not re.fullmatch(r"\d{5}(-\d{4})?", t)]  # drop zip
-    toks = [SUFFIX.get(t, t) for t in toks]
+    if toks:
+        toks[-1] = SUFFIX.get(toks[-1], toks[-1])          # suffix: last token only
+        toks[0] = _DIR.get(toks[0], toks[0])               # leading direction word
     return " ".join(toks).strip()
+
+
+def zip_of(s):
+    """The 5-digit ZIP in a raw query, if any."""
+    m = _ZIP.search(s or "")
+    return m.group(1) if m else None
 
 
 def street_of(norm):
@@ -146,6 +158,7 @@ def load():
                 "zone": (row["ZONE_NAME"] or "").strip(),
                 "neighborhood": (row["NEIHOOD"] or "").strip(),
                 "flood": (row["FLOODZONE"] or "").strip(),
+                "zip": (row.get("ZIP_CODE") or "").strip()[:5],
                 "owner_mail": " ".join(x for x in [(row.get("assessor_Owner_Address1") or "").strip(),
                                                    (row.get("assessor_Owner_Address2") or "").strip()] if x),
                 "bbox": bb,
@@ -210,46 +223,82 @@ def search(q):
     if not raw:
         return {"matched": False, "error": "empty query"}
     nq = normalize_addr(raw)
+    if not nq:
+        return {"matched": False, "error": "empty query"}
+    toks = nq.split()
+    has_number = bool(re.match(r"^\d", toks[0])) if toks else False
     mode = "address"
+    hits = []
 
-    # Score each parcel against the normalized query:
-    #   3 = exact address, 2 = address starts with query, 1 = query is a substring.
-    scored = []
-    if nq:
-        for p in PARCELS:
-            na = p["norm"]
-            if not na:
-                continue
-            if na == nq:
-                scored.append((3, p))
-            elif na.startswith(nq + " ") or na.startswith(nq):
-                scored.append((2, p))
-            elif nq in na:
-                scored.append((1, p))
+    def _sopt(p):
+        return {"address": p["address"], "owner": p["owner"]}
 
-    if scored:
-        best = max(s for s, _ in scored)
-        hits = [p for s, p in scored if s == best]  # keep only the best tier
+    if has_number:
+        # ADDRESS query. A bare number ("1") is too ambiguous — require a street too.
+        if len(toks) < 2:
+            return {"matched": False, "query": raw, "ambiguous": "number",
+                    "error": "Include a street name too — e.g. “380 Cooley St”."}
+        qnum = int(re.match(r"^(\d+)", toks[0]).group(1))
+        qstreet = " ".join(toks[1:])
+        exact = [p for p in PARCELS if p["norm"] == nq]
+        if exact:
+            hits = exact
+        else:
+            # match a house number that falls inside a parcel's range ("1387-1391 MAIN ST")
+            for p in PARCELS:
+                pt = p["norm"].split()
+                if not pt or street_of(p["norm"]) != qstreet:
+                    continue
+                m = re.match(r"^(\d+)(?:-(\d+))?$", pt[0])
+                if not m:
+                    continue
+                lo, hi = int(m.group(1)), int(m.group(2) or m.group(1))
+                if lo <= qnum <= hi:
+                    hits.append(p)
     else:
-        # fall back to owner-name search
-        uq = raw.upper()
-        hits = [p for p in PARCELS if uq in p["owner"].upper()]
-        mode = "owner"
+        # NAME query: a whole street, or an owner. NEVER a loose substring (that's what let
+        # "LLC" match "HILLCREST" and "Main St" match every Main St parcel).
+        street_hits = [p for p in PARCELS if street_of(p["norm"]) == nq]
+        if street_hits:
+            opts = sorted(street_hits, key=lambda p: p["assessed"], reverse=True)[:12]
+            return {"matched": False, "query": raw, "ambiguous": "street", "street": nq,
+                    "suggestions": [_sopt(p) for p in opts]}
+        uq = re.sub(r"\s+", " ", raw.strip().upper())
+        if len(uq) < 3:
+            return {"matched": False, "query": raw, "ambiguous": "short",
+                    "error": "Too short — enter a full address or owner name."}
+        owner_hits = [p for p in PARCELS if re.search(r"\b" + re.escape(uq) + r"\b", p["owner"].upper())]
+        owners = {p["owner"].upper() for p in owner_hits}
+        if len(owners) > 25 or len(owner_hits) > 60:
+            return {"matched": False, "query": raw, "ambiguous": "too_broad",
+                    "error": "That matches too many owners — be more specific."}
+        if len(owners) > 1:
+            opts = sorted(owner_hits, key=lambda p: p["assessed"], reverse=True)[:12]
+            return {"matched": False, "query": raw, "ambiguous": "owner",
+                    "suggestions": [_sopt(p) for p in opts]}
+        if owner_hits:
+            hits, mode = owner_hits, "owner"
 
     if not hits:
-        # No parcel at this address (often a secondary/entrance address). Offer nearby
-        # addresses on the SAME street so the user can pick the real parcel.
+        # No match. Offer other parcels on the SAME street (whole-street match, not substring).
         st = street_of(nq)
         suggestions = []
-        if st:
-            same = [p for p in PARCELS if p["norm"].endswith(st) or (" " + st + " ") in (" " + p["norm"] + " ")]
-            same = sorted(same, key=lambda p: p["assessed"], reverse=True)[:8]
-            suggestions = [{"address": p["address"], "owner": p["owner"]} for p in same]
+        if st and len(st) >= 3:
+            same = sorted((p for p in PARCELS if street_of(p["norm"]) == st),
+                          key=lambda p: p["assessed"], reverse=True)[:8]
+            suggestions = [_sopt(p) for p in same]
         return {"matched": False, "query": raw, "street": st, "suggestions": suggestions}
 
     # pick the highest-assessed matching parcel as the anchor, resolve its owner
     anchor = max(hits, key=lambda p: p["assessed"])
     owner = anchor["owner"]
+    # if the query carried a ZIP that disagrees with the matched parcel's ZIP, warn rather
+    # than silently resolving (a wrong ZIP shouldn't quietly return a plausible-looking hit)
+    qzip = zip_of(raw)
+    zip_warning = None
+    if qzip and anchor.get("zip") and qzip != anchor["zip"]:
+        zip_warning = (f"You entered ZIP {qzip}, but this parcel is in {anchor['zip']}. "
+                       "Showing the address match — double-check it's the right property.")
     # the assemblage is the CONTIGUOUS cluster around the anchor, not every parcel the
     # owner holds (same owner != same property — see assemblage_cluster).
     owner_parcels = BY_OWNER.get(owner.upper(), [anchor])
@@ -270,7 +319,16 @@ def search(q):
     # block the main result from showing.
     enrichment = None
     if not deep:
-        enrichment = enrich(anchor["apn"])
+        # Hard wall-clock cap: a City-owned megaparcel (e.g. 299 Sumner Ave / Forest Park)
+        # can have many record cards, and the assessor site occasionally stalls — without a
+        # ceiling the whole search hangs "forever". Cap it; on timeout we return the parcel
+        # with enrichment=None (the frontend shows the record card as unavailable + retry)
+        # rather than blocking the result.
+        try:
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                enrichment = ex.submit(enrich, anchor["apn"]).result(timeout=14)
+        except Exception:
+            enrichment = None
 
     bsqft = 336205 if deep else (enrichment or {}).get("total_building_sqft") or 0
     stories = None
@@ -298,6 +356,7 @@ def search(q):
         "zoning": resolve_zoning(anchor, assemblage, enrichment, deep),
         "disposition": disposition_signals(anchor, owner, len(owner_parcels), enrichment, deep),
         "match_count": len(hits),
+        "zip_warning": zip_warning,
         # how many OTHER parcels this owner holds that are NOT part of this property (they
         # aren't contiguous) — shown as context, never merged into the assemblage.
         "owner_other_parcels": owner_other_parcels,
@@ -340,8 +399,10 @@ def resolve_zoning(anchor, assemblage, enrichment, deep):
         if z:
             z["raw_zone"] = c
             if is_split:
+                dn = z.get("district_name", "")
+                kind = "district" if dn.lower().startswith("residence") else "commercial district"
                 z["split_note"] = ('This assemblage spans multiple zoning districts ("Split"); '
-                                   "showing " + z["district_name"] + ", its primary commercial district.")
+                                   f"showing {dn}, its primary {kind}.")
             return z
     return None
 
@@ -361,6 +422,25 @@ def _owner_posture(owner, parcel_count, deep):
     if deep:
         return ("Public REIT", "owner is a public REIT (SEC filer) that actively manages and "
                 "prunes its portfolio", "raises", "verified", "SEC EDGAR")
+    # Government / public authority — check FIRST so a "...AUTHORITY INC" isn't mislabeled an
+    # investor. These almost never make an opportunistic market disposition.
+    if re.search(r"\bCITY OF\b|\bTOWN OF\b|COMMONWEALTH|UNITED STATES|\bU S A\b|\bCOUNTY\b|"
+                 r"AUTHORITY|\bAUTH\b|REDEVELOPMENT AUTH|HOUSING AUTH|PARKING AUTH|CONVENTION CENTER|"
+                 r"COMMISSION|DEPARTMENT|\bD P W\b|\bM B T A\b|\bDCR\b", name):
+        return ("Government / public", "government or public-authority owner — rarely a market "
+                "disposition", "lowers", "strong", "entity name")
+    # Institutional, mission-driven owners (hospitals, universities, churches, insurers,
+    # nonprofits). Also checked BEFORE the LLC/Inc test — "BAYSTATE MEDICAL CENTER INC" is a
+    # hospital, not an "active investor"; "MASS MUTUAL ... INSURANCE CO" is an insurer, not an
+    # individual. These hold for mission/long-term reasons, so they lower disposition odds.
+    if re.search(r"HOSPITAL|MEDICAL CENTER|\bMEDICAL\b|HEALTH ?CARE|\bHEALTH\b|CLINIC|"
+                 r"UNIVERSITY|COLLEGE|ACADEMY|\bSCHOOL\b|EDUCAT|"
+                 r"CHURCH|TEMPLE|SYNAGOGUE|MOSQUE|PARISH|DIOCESE|ARCHDIOCESE|MINISTR|CONGREGATION|"
+                 r"FOUNDATION|NON.?PROFIT|ASSOCIATION|\bSOCIETY\b|MUSEUM|LIBRARY|\bYMCA\b|\bYWCA\b|"
+                 r"INSURANCE|MUTUAL LIFE|MASS ?MUTUAL", name):
+        return ("Institutional owner", "institutional / mission-driven owner (health, education, "
+                "religious, nonprofit or insurer) — holds long-term, rarely an opportunistic seller",
+                "lowers", "strong", "entity name")
     if re.search(r"\bLLC\b|\bL L C\b|\bLP\b|\bLLP\b|LIMITED PARTNERSHIP|\bINC\b|CORP|COMPANY", name):
         if parcel_count >= 6:
             return ("Active investor", f"investment entity (LLC/LP/Corp) holding {parcel_count} "
@@ -369,10 +449,6 @@ def _owner_posture(owner, parcel_count, deep):
         return ("Private investor", "investment entity (LLC/LP/Corp) holding "
                 f"{parcel_count} parcel(s) — a private / single-asset investor", "neutral",
                 "strong", "entity name + our parcel index")
-    if re.search(r"CITY OF|COMMONWEALTH|AUTHORITY|HOUSING|CHURCH|COLLEGE|UNIVERSITY|BISHOP|"
-                 r"COMMISSION|DEPARTMENT|DIOCESE|MINISTR", name):
-        return ("Institutional / government", "institutional or government owner — rarely a "
-                "market disposition", "lowers", "strong", "entity name")
     if re.search(r"\bTRUST\b|\bTR\b|TRUSTEE|\bEST\b|ESTATE", name):
         return ("Trust / estate", f"held in trust/estate ({parcel_count} parcel(s)) — can "
                 "transition on a life event", "neutral", "moderate", "entity name")
@@ -648,8 +724,13 @@ def _run_deeds_job(job_id, owner):
         job["error"] = str(e)
 
 
-def start_deeds(owner):
-    """Cached result, an in-flight job, or a freshly started one. Never blocks."""
+def start_deeds(owner, peek=False):
+    """Cached result, an in-flight job, or a freshly started one. Never blocks.
+
+    peek=True: report cache/in-flight status ONLY and never START a browser job. The UI
+    calls this on render so it can auto-show an already-cached result WITHOUT silently
+    kicking off a ~30s registry scrape for a property the user only glanced at. A real
+    lookup requires an explicit click (peek=False)."""
     key = _norm_owner(owner)
     if not key:
         return {"status": "error", "error": "no owner name"}
@@ -659,6 +740,8 @@ def start_deeds(owner):
         for jid, j in DEEDS_JOBS.items():
             if j["key"] == key and j["status"] == "running":
                 return {"status": "running", "job": jid}
+        if peek:
+            return {"status": "idle", "cached": False}   # not cached, and we won't start one
         job_id = uuid.uuid4().hex[:12]
         DEEDS_JOBS[job_id] = {"status": "running", "key": key, "result": None,
                               "error": None, "started": time.time()}
@@ -760,8 +843,10 @@ class Handler(BaseHTTPRequestHandler):
         elif u.path == "/api/deeds":
             # Registry of Deeds for an owner. Browser-driven + paced, so it's a background
             # job like research: returns a cached doc or a job id to poll.
-            owner = parse_qs(u.query).get("owner", [""])[0]
-            self._send(200, json.dumps(start_deeds(owner)))
+            qp = parse_qs(u.query)
+            owner = qp.get("owner", [""])[0]
+            peek = qp.get("peek", ["0"])[0] == "1"   # peek: check cache WITHOUT starting a job
+            self._send(200, json.dumps(start_deeds(owner, peek=peek)))
         elif u.path == "/api/deeds/status":
             job = parse_qs(u.query).get("job", [""])[0]
             self._send(200, json.dumps(deeds_status(job)))
@@ -1111,15 +1196,17 @@ PAGE = r"""<!doctype html>
   .dfac .ff{color:var(--slate);font-size:12.5px;margin-top:1px;line-height:1.45}
   .dfac .fsrc{font-size:10.5px;color:var(--faint);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
   .dpend{background:var(--mist);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--slate);margin-top:12px}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style></head><body>
-<div class="hero">
+<header class="hero">
   <div class="kick">DealSynq &bull; Property Intelligence</div>
   <h1>Every public record on a property, in <em>one search</em>.</h1>
   <p>Ownership &amp; assemblage, zoning, recorded deeds &amp; mortgages, tenants, and a deep web sweep &mdash; assembled live from public sources.</p>
-  <div class="searchwrap">
+  <div class="searchwrap" role="search">
+    <label for="q" class="visually-hidden">Search by Springfield address or owner name</label>
     <div class="searchbox">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input id="q" placeholder="e.g. 380 Cooley St  &mdash;  or an owner name" autofocus>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input id="q" placeholder="e.g. 380 Cooley St  &mdash;  or an owner name" autofocus aria-label="Search by Springfield address or owner name">
     </div>
     <button id="go">Search</button>
   </div>
@@ -1130,8 +1217,8 @@ PAGE = r"""<!doctype html>
     <button class="ex" data-q="115 Cooley St"><b>115 Cooley St</b><span>single-family home</span></button>
     <button class="ex" data-q="1391 Main St"><b>1391 Main St</b><span>another address</span></button>
   </div>
-</div>
-<div class="wrap" id="out"></div>
+</header>
+<main class="wrap" id="out" aria-live="polite" aria-busy="false"></main>
 <footer class="foot">
   <div><span class="brand">DEALSYNQ</span> &nbsp;&bull;&nbsp; Property Intelligence &mdash; single-property proof of concept</div>
   <div style="margin-top:6px">Data from public sources: Springfield WebGIS &amp; Assessor
@@ -1164,22 +1251,38 @@ let GEN=0;
 const stale=g=>g!==GEN;
 
 async function run(){
-  const q=$("#q").value.trim(); if(!q)return;
+  const q=$("#q").value.trim();
+  if(!q){                                // blank/whitespace: say so, don't leave stale results up
+    out.innerHTML='<div class="card empty" style="text-align:center"><b>Enter an address or owner name.</b><br>This demo covers Springfield, MA. Try <b>380 Cooley St</b>.</div>';
+    return;
+  }
   const gen=++GEN;
+  out.setAttribute("aria-busy","true");
   out.innerHTML=loadingHTML("Resolving &hellip;");
-  const r=await fetch("/api/search?q="+encodeURIComponent(q));
-  const d=await r.json();
+  let d;
+  try{ const r=await fetch("/api/search?q="+encodeURIComponent(q)); d=await r.json(); }
+  catch(e){ if(!stale(gen)){ out.setAttribute("aria-busy","false"); out.innerHTML='<div class="card empty" style="text-align:center"><b>The lookup failed &mdash; check your connection and try again.</b></div>'; } return; }
   if(stale(gen)) return;                 // a newer search overtook this one
+  out.setAttribute("aria-busy","false");
   if(!d.matched){
+    // Headline depends on WHY there's no single match, so the user knows what to do next.
+    const amb=d.ambiguous;
+    let head, lead;
+    if(amb==='street'){ head='&ldquo;'+esc(q)+'&rdquo; is a street, not one property.'; lead='Pick the parcel you mean:'; }
+    else if(amb==='owner'){ head='Several owners match &ldquo;'+esc(q)+'&rdquo;.'; lead='Pick a property:'; }
+    else if(amb==='too_broad'){ head=esc(d.error||'Too many matches.'); lead=''; }
+    else if(amb==='number'||amb==='short'){ head=esc(d.error||'Please be more specific.'); lead=''; }
+    else if(d.suggestions&&d.suggestions.length){ head='No parcel is recorded at that exact address.'; lead='It may be a secondary/entrance address &mdash; other parcels on that street:'; }
+    else { head='No match for &ldquo;'+esc(q)+'&rdquo;.'; lead=''; }
     let sg='';
     if(d.suggestions&&d.suggestions.length){
-      sg='<div style="margin-top:14px;text-align:left"><div class="muted" style="margin-bottom:8px">No parcel is recorded at that exact address &mdash; it may be a secondary/entrance address. Other parcels on that street:</div>';
-      d.suggestions.forEach(s=>{sg+='<button class="sugg" data-q="'+escA(s.address)+'"><b>'+esc(titlecase(s.address))+'</b><span>'+esc(s.owner)+'</span></button>';});
+      sg='<div style="margin-top:14px;text-align:left">'+(lead?'<div class="muted" style="margin-bottom:8px">'+lead+'</div>':'');
+      d.suggestions.forEach(s=>{sg+='<button class="sugg" data-q="'+escA(s.address)+'"><b>'+esc(smartTitle(s.address))+'</b><span>'+esc(smartTitle(s.owner))+'</span></button>';});
       sg+='</div>';
-    } else {
+    } else if(!amb){
       sg='<br>This demo covers Springfield, MA. Try <b>380 Cooley St</b>.';
     }
-    out.innerHTML='<div class="card empty" style="text-align:center"><b>No exact match for &ldquo;'+esc(q)+'&rdquo;.</b>'+sg+'</div>';
+    out.innerHTML='<div class="card empty" style="text-align:center"><b>'+head+'</b>'+sg+'</div>';
     document.querySelectorAll(".sugg").forEach(b=>b.onclick=()=>{$("#q").value=b.dataset.q;run();});
     return;
   }
@@ -1199,12 +1302,17 @@ function renderExtraCards(biz,st){
     const shown=onParcel.length?onParcel:biz;
     h+='<div class="bizwrap">';
     shown.forEach(x=>{
-      const sub=[x.type&&x.type.replace(/_/g," "), x.cuisine].filter(Boolean).join(" &bull; ");
-      h+='<div class="biz"><b>'+esc(x.name)+'</b><span>'+esc(sub)+(x.distance_m!=null?(" &bull; "+x.distance_m+"m"):"")+'</span></div>';
+      // humanize "steak_house"/"italian;pizza" and use a LITERAL middot — never the HTML
+      // entity "&bull;" here: this string is passed through esc(), which would turn it into
+      // literal text "&bull;" and (with text-transform) render "&Bull;".
+      const clean=s=>String(s||"").replace(/[_;]+/g," ").trim();
+      const sub=[clean(x.type), clean(x.cuisine)].filter(Boolean).join(" · ");
+      const dist=(x.distance_m!=null?(" · "+x.distance_m+"m"):"");
+      h+='<div class="biz"><b>'+esc(x.name)+'</b><span>'+esc(sub+dist)+'</span></div>';
     });
     h+='</div>';
     h+= onParcel.length
-      ? '<div class="muted">Actual operating businesses at this location &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name.</div>'
+      ? '<div class="muted"><b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.</div>'
       : '<div class="muted"><b>Nothing is mapped on this parcel itself</b> &mdash; these are the nearest mapped businesses (see distances). OpenStreetMap is volunteer-mapped, so smaller tenants are often missing.</div>';
   } else if(biz){   // reached OSM, genuinely nothing nearby
     h+='<div class="note">No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>. A paid source (e.g. Google Places) would cover more.</div>';
@@ -1220,7 +1328,10 @@ function renderExtraCards(biz,st){
     if(st.existing_far!=null) h+=kpi(st.existing_far,"Existing FAR");
     if(st.estimated_parking_spaces) h+=kpi("~"+st.estimated_parking_spaces.toLocaleString(),"Parking (est)");
     if(st.estimated_solar_kw) h+=kpi("~"+st.estimated_solar_kw.toLocaleString()+" kW","Solar (est)");
-    h+='</div><div class="muted">Footprint &amp; roof area from OpenStreetMap building polygons; height, parking, solar and FAR are <b>estimates</b> derived from footprint + parcel size. Max-permitted FAR, LEED and Energy Star require the zoning ordinance and USGBC/EPA registries (not yet wired).</div></div>';
+    const fpsrc=(st.footprint_source||"").toLowerCase().indexOf("assessor")>=0
+      ? 'Footprint is the <b>assessor&rsquo;s single-story building area</b> (no OSM polygon was mapped here)'
+      : 'Footprint &amp; roof area are from <b>OpenStreetMap building polygons</b>';
+    h+='</div><div class="muted">'+fpsrc+'; height, parking, solar and FAR are <b>estimates</b> derived from footprint + parcel size. Max-permitted FAR, LEED and Energy Star require the zoning ordinance and USGBC/EPA registries (not yet wired).</div></div>';
   }
   return h;
 }
@@ -1261,12 +1372,18 @@ function render(d){
 
   // header + KPIs
   h+='<div class="card"><div class="prophead"><div><h2>'+esc(name)+'</h2><div class="sub">'+subtitle+'</div></div>'+badge+'</div>';
+  // wrong-ZIP warning — surfaced, never silently resolved
+  if(d.zip_warning) h+='<div class="note" style="margin:2px 0 10px">&#9888; '+esc(d.zip_warning)+'</div>';
   h+='<div class="kpis">';
   h+=kpi(t.parcels,"Parcels");
-  h+=kpi(t.land_acres,"Land Acres");
+  // condos / air-rights parcels carry no land — show "n/a", never a misleading "0"
+  h+=kpi((t.land_acres&&t.land_acres>0)?t.land_acres:"n/a","Land Acres");
   if(deep){h+=kpi("336,205","Building SF");h+=kpi(deep.tenants.occupancy_rate_by_sqft+"%","Occupancy");}
   h+=kpi(money(t.assessed),"Assessed");
   h+='</div>';
+  // when an OWNER search resolved to one of several holdings, say which (transparency)
+  if(d.mode==="owner" && d.match_count>1)
+    h+='<div class="muted" style="margin-top:4px">Owner search &mdash; showing the highest-assessed of <b>'+d.match_count+'</b> parcels indexed under this name. Enter a full street address to pinpoint a specific one.</div>';
   h+='</div>';
 
   // ---- Businesses operating here + Building Footprint (OSM) ----
@@ -1392,8 +1509,17 @@ function render(d){
 
   out.innerHTML=h;
   wrapTables(out);
+  // Reset ALL cross-card state on every new property. The disposition card augments itself
+  // from deeds + research; if these aren't cleared, the PREVIOUS property's mortgage/lien and
+  // marketplace-listing flag leak into the new property's signals. __propKey stamps which
+  // property is current so a late-arriving async deeds/research response for a prior search
+  // is ignored (see renderDeeds/renderResearch + dispAugmentFactors).
+  window.__propKey = (d.owner||"")+"|"+(d.anchor_address||"");
   window.__disp = d.disposition || null;
   window.__lastDeeds = null;
+  window.__lastDeedsKey = null;
+  window.__research = null;
+  window.__researchKey = null;
   renderDisposition();
   initDeeds();
   initResearch();
@@ -1403,11 +1529,15 @@ function render(d){
 // ---------- Ownership (live properties — from the assessor owner record) ----------
 function ownerEntity(name){
   const n=(name||"").toUpperCase();
+  // Government / public and institutional owners are checked FIRST so a hospital or authority
+  // that happens to be incorporated ("...MEDICAL CENTER INC") isn't mislabeled a corporation
+  // — keeping this card consistent with the Disposition card's owner-posture read.
+  if(/\bCITY OF\b|\bTOWN OF\b|COMMONWEALTH|UNITED STATES|\bCOUNTY\b|AUTHORITY|\bAUTH\b|COMMISSION|DEPARTMENT|HOUSING AUTH/.test(n)) return ["Gov","Government / public"];
+  if(/HOSPITAL|MEDICAL|\bHEALTH\b|CLINIC|UNIVERSITY|COLLEGE|ACADEMY|\bSCHOOL\b|CHURCH|TEMPLE|SYNAGOGUE|PARISH|DIOCESE|MINISTR|FOUNDATION|NON.?PROFIT|ASSOCIATION|\bSOCIETY\b|MUSEUM|LIBRARY|INSURANCE|MUTUAL LIFE|MASS ?MUTUAL/.test(n)) return ["Institutional","Institutional owner"];
   if(/\bLLC\b|\bL L C\b/.test(n)) return ["LLC","Investment entity (LLC)"];
   if(/\bLP\b|\bLLP\b|LIMITED PARTNERSHIP/.test(n)) return ["LP","Investment entity (LP)"];
   if(/\bINC\b|CORP|COMPANY/.test(n)) return ["Corp","Corporation"];
   if(/\bTRUST\b|\bTR\b|TRUSTEE|ESTATE|\bEST\b/.test(n)) return ["Trust","Trust / estate"];
-  if(/CITY OF|COMMONWEALTH|AUTHORITY|HOUSING|CHURCH|COLLEGE|UNIVERSITY|BISHOP|COMMISSION|DIOCESE/.test(n)) return ["Gov/Inst","Institutional / government"];
   return ["Individual","Individual owner"];
 }
 // title-case that preserves acronyms/codes/state abbreviations (LLC, CVS, RI, A-CSF-27),
@@ -1415,6 +1545,15 @@ function ownerEntity(name){
 const _KEEPUP=new Set(("LLC LLP LP PLLC INC CORP CO LTD PC NA USA US DBA CVS TD JP UBS BNY HSBC "
   +"AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ "
   +"NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC").split(" "));
+// decode HTML entities that slip in from the registry index ("SAGON (&amp;O)" -> "(&O)")
+// so they don't render as literal, title-cased "&Amp;". Handles double-encoding too.
+function deent(s){
+  let x=String(s||"");
+  for(let i=0;i<3&&/&(amp|#38|quot|#34|#39|apos|lt|gt);/i.test(x);i++)
+    x=x.replace(/&amp;/gi,"&").replace(/&#38;/g,"&").replace(/&quot;/gi,'"').replace(/&#34;/g,'"')
+       .replace(/&#39;/g,"'").replace(/&apos;/gi,"'").replace(/&lt;/gi,"<").replace(/&gt;/gi,">");
+  return x;
+}
 function smartTitle(s){
   return (s||"").split(/\s+/).map(w=>{
     if(!w) return w;
@@ -1448,8 +1587,9 @@ function renderOwnership(d){
 // probability — a transparent, source-tagged, leading-indicator read.
 function dispAugmentFactors(){
   const extra=[];
-  // debt maturity — from the loaded deeds summary
-  const dd=window.__lastDeeds;
+  // debt maturity — from the loaded deeds summary. Guard: only use deeds that were loaded
+  // for the CURRENTLY displayed property (a stale value from a prior search must not leak in).
+  const dd=(window.__lastDeedsKey===window.__propKey)?window.__lastDeeds:null;
   if(dd&&dd.summary){
     const lm=dd.summary.latest_mortgage;
     if(!dd.summary.counts.mortgages){
@@ -1464,8 +1604,8 @@ function dispAugmentFactors(){
     if(dd.summary.counts.liens&&ll&&ll.age_years!=null&&ll.age_years<=10)
       extra.push({key:"distress",label:"Distress",finding:"recent lien ("+(ll.type||"lien")+", "+ll.age_years+" yr old) — possible forced-sale pressure",direction:"raises",weight:1,source:"Registry of Deeds",confidence:"strong"});
   }
-  // active listing — from the loaded research sources
-  const rs=window.__research;
+  // active listing — from the loaded research sources (same current-property guard)
+  const rs=(window.__researchKey===window.__propKey)?window.__research:null;
   if(rs&&rs.sources){
     const listers=/loopnet|crexi|cityfeet|showcase|commercialcafe|commercialsearch|catylist|brevitas|ten-x/i;
     const hit=rs.sources.find(s=>listers.test(s.domain||""));
@@ -1519,15 +1659,27 @@ function initDeeds(){
   const gen=GEN;
   const owner=el.dataset.owner;
   if(!owner){el.remove();return;}
+  // The registry indexes by INDIVIDUAL party name. A compound assessor owner
+  // ("A LLC & B LLC & C LLC") returns nothing if searched whole, so split it and search the
+  // PRIMARY entity — and say so, rather than silently returning an empty (misleading) result.
+  const parts=owner.split(/\s*&\s*|\s+AND\s+/i).map(s=>s.trim()).filter(Boolean);
+  const searchName=parts[0]||owner;
+  const compound=parts.length>1;
+  const compoundNote=compound
+    ? '<div class="muted" style="margin:0 0 10px">This parcel is co-owned by <b>'+parts.length+'</b> entities. The registry indexes by individual name, so this searches the primary entity, <b>'+esc(smartTitle(searchName))+'</b>. Co-owners: '+esc(smartTitle(parts.slice(1).join(", ")))+'.</div>'
+    : '';
+  el.dataset.searchOwner=searchName;
   el.innerHTML='<h3 class="sec">Recorded Documents <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; Hampden County Registry of Deeds</span></h3>'
-    +'<div class="muted" style="margin:0 0 12px">Every deed, mortgage, discharge, lien, easement and lease recorded under <b>'+esc(owner)+'</b> '
+    +'<div class="muted" style="margin:0 0 12px">Every deed, mortgage, discharge, lien, easement and lease recorded under <b>'+esc(smartTitle(searchName))+'</b> '
     +'&mdash; the debt &amp; encumbrance picture the assessor never publishes.</div>'
+    +compoundNote
     +'<button class="rbtn" id="dgo">Look up recorded documents</button>'
     +'<span class="muted" id="dnote" style="margin-left:12px">~30s &bull; the registry is bot-protected, so this runs a real browser, paced</span>'
     +'<div id="dbody"></div>';
-  document.getElementById("dgo").onclick=()=>runDeeds(owner,GEN);
-  // if it's already cached server-side, load it immediately (no click, no wait)
-  fetch("/api/deeds?owner="+encodeURIComponent(owner)).then(r=>r.json()).then(d=>{
+  document.getElementById("dgo").onclick=()=>runDeeds(searchName,GEN);
+  // PEEK only — if a result is already cached server-side, show it; otherwise do NOTHING
+  // (never auto-start a ~30s registry browser job just because a property was rendered).
+  fetch("/api/deeds?peek=1&owner="+encodeURIComponent(searchName)).then(r=>r.json()).then(d=>{
     if(stale(gen)) return;                     // belongs to a previous address
     if(d.status==="done"&&d.cached) renderDeeds(d.result,true);
   }).catch(()=>{});
@@ -1605,7 +1757,7 @@ function renderDeeds(doc,cached){
     else if(lmAge<=25) tier=' &mdash; <b>'+lmAge+' years old</b>, very likely long satisfied.';
     else tier=' &mdash; <b>'+lmAge+' years old</b>, older than any typical loan &mdash; almost certainly satisfied.';
     h+='<b style="color:'+(attention?"#B3261E":"var(--slate)")+'">Most recent mortgage: '+esc(lm.date||"")
-      +(lm.lender?(' to '+esc(titlecase(lm.lender))):'')+'</b>'+tier;
+      +(lm.lender?(' to '+esc(smartTitle(deent(lm.lender)))):'')+'</b>'+tier;
     if(s.mortgage_dates&&s.mortgage_dates.length>1)
       h+=' All recorded: '+s.mortgage_dates.map(esc).join(', ')+'.';
   }
@@ -1627,8 +1779,9 @@ function renderDeeds(doc,cached){
     const rows=doc.records.slice().sort((a,b)=>dkey(b.date_received)-dkey(a.date_received));
     rows.forEach(r=>{
       const role=r.party_role==="grantee"?"&larr;":"&rarr;";
-      // NB: keep the em-dash entity OUT of esc()/titlecase() — they'd mangle it to "&Mdash;"
-      const party=r.reverse_party ? esc(titlecase(r.reverse_party)) : "&mdash;";
+      // NB: keep the em-dash entity OUT of esc()/smartTitle() — they'd mangle it to "&Mdash;".
+      // deent() first so a raw "&amp;" doesn't render as literal "&Amp;".
+      const party=r.reverse_party ? esc(smartTitle(deent(r.reverse_party))) : "&mdash;";
       h+='<tr><td>'+esc(r.date_received||"")+'</td>'
         +'<td><span class="dtype '+dtypeClass(r.document_type)+'">'+esc(r.document_type||"")+'</span></td>'
         +'<td>'+esc(r.book_page||"")+'</td>'
@@ -1643,7 +1796,8 @@ function renderDeeds(doc,cached){
     +'Indexed by <b>owner name</b>, so these are documents recorded under &ldquo;'+esc(doc.owner)+'&rdquo; in Hampden County &mdash; for a single-property LLC that is this property’s record; for an individual owner it may span other properties.</div>';
   body.innerHTML=h;
   wrapTables(body);
-  window.__lastDeeds=doc; renderDisposition();   // refine the disposition read with debt/lien
+  window.__lastDeeds=doc; window.__lastDeedsKey=window.__propKey;
+  renderDisposition();   // refine the disposition read with debt/lien
 }
 
 // ---------- Zoning ----------
@@ -1738,7 +1892,7 @@ function renderResearch(doc,cached){
     +doc.query_count+' automated keyword searches, run '+esc((doc.generated_at||"").slice(0,10))+'. '
     +'This is a first-pass automated web sweep &mdash; a discovery list of where the data lives, not yet verified or extracted.</div>';
   body.innerHTML=h;
-  window.__research=doc;
+  window.__research=doc; window.__researchKey=window.__propKey;
   renderDisposition();   // refine the disposition read with an active-listing check
   drawSources("__all");
   document.querySelectorAll("#rchips .rchip").forEach(c=>c.onclick=()=>{
