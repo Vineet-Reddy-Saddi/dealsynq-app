@@ -176,6 +176,13 @@ def summarize(records):
     # — neither is a lease. Only genuine LEASE / NOTICE / MEMORANDUM instruments count.
     leases = [r for r in records if w(r, "LEASE") and not w(r, *FLIP)]
     easements = [r for r in records if w(r, "EASEMENT")]
+    # Deeds where the SEARCHED name is the GRANTOR (seller), not grantee (buyer). The
+    # registry indexes by name across the whole county, not per-property — so a grantor
+    # deed under this name is almost always a DIFFERENT property (when this owner acquired
+    # THIS property they'd show as grantee on that deed, not grantor). A recent one is a
+    # real, direct signal that this owner is actively selling in the market right now —
+    # stronger than inferring activity from entity type alone.
+    sales_as_seller = [r for r in deeds_ if r.get("party_role") == "grantor"]
 
     import datetime
     today = datetime.date.today()
@@ -189,6 +196,7 @@ def summarize(records):
 
     latest, latest_age = _newest(mortgages)
     latest_lien, lien_age = _newest(liens)
+    latest_sale, sale_age = _newest(sales_as_seller)
     return {
         "total": len(records),
         "counts": {
@@ -209,6 +217,12 @@ def summarize(records):
         "mortgage_dates": [r.get("date_received") for r in mortgages],
         "discharges_found": len(discharges),
         "has_any_lien": bool(liens),
+        # sales where this owner was the SELLER — see comment above sales_as_seller.
+        "sales_as_seller_count": len(sales_as_seller),
+        "latest_sale_as_seller": ({"date": latest_sale.get("date_received"),
+                                   "buyer": latest_sale.get("reverse_party"),
+                                   "book_page": latest_sale.get("book_page"),
+                                   "age_years": sale_age} if latest_sale else None),
     }
 
 

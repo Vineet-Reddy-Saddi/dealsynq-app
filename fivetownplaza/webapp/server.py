@@ -645,6 +645,11 @@ def load_precache():
             RESEARCH_PREBUILT[normalize_addr(doc["address"])] = doc
             loaded_r += 1
         elif fn.startswith("deeds_") and doc.get("owner"):
+            # re-derive summary from the raw records at load time (cheap, no network) so a
+            # precached file always reflects the CURRENT summarize() logic, not whatever
+            # version was live when precache_demo.py last ran.
+            if doc.get("records") is not None:
+                doc["summary"] = deeds_summarize(doc["records"])
             DEEDS_DONE[_norm_owner(doc["owner"])] = doc
             loaded_d += 1
     if loaded_e or loaded_r or loaded_d:
@@ -1603,6 +1608,14 @@ function dispAugmentFactors(){
     const ll=dd.summary.latest_lien;
     if(dd.summary.counts.liens&&ll&&ll.age_years!=null&&ll.age_years<=10)
       extra.push({key:"distress",label:"Distress",finding:"recent lien ("+(ll.type||"lien")+", "+ll.age_years+" yr old) — possible forced-sale pressure",direction:"raises",weight:1,source:"Registry of Deeds",confidence:"strong"});
+    // market activity — this owner as SELLER (grantor) on a deed under this name, almost
+    // always a DIFFERENT property (see hampden_browser.summarize). A recent one is direct
+    // evidence they're actively transacting right now, not an inference from entity type.
+    const ls=dd.summary.latest_sale_as_seller;
+    if(ls&&ls.age_years!=null){
+      if(ls.age_years<=3) extra.push({key:"activity",label:"Market activity",finding:"sold a property as seller ~"+ls.age_years+" yr ago (book/page "+(ls.book_page||"")+") — actively transacting in the market under this name",direction:"raises",weight:2,source:"Registry of Deeds",confidence:"strong"});
+      else extra.push({key:"activity",label:"Market activity",finding:"most recent sale as seller under this name was ~"+ls.age_years+" yrs ago — no recent transaction activity",direction:"neutral",weight:0,source:"Registry of Deeds",confidence:"strong"});
+    }
   }
   // active listing — from the loaded research sources (same current-property guard)
   const rs=(window.__researchKey===window.__propKey)?window.__research:null;
@@ -1653,6 +1666,25 @@ function renderDisposition(){
   el.innerHTML=h;
 }
 
+// Split a compound assessor owner string into individual legal-entity names. See the
+// caller (initDeeds) for why a naive split on every "&" is wrong.
+function splitOwnerEntities(owner){
+  const SUFFIX=/\b(LLC|INC|CORP|CO|LP|LTD|TRUST|TRUSTEE)\b/i;
+  const tokens=(owner||"").split(/(\s+AND\s+|\s*&\s*)/i);
+  const parts=[]; let buf="";
+  tokens.forEach(t=>{
+    if(/^\s+AND\s+$/i.test(t)){ if(buf.trim())parts.push(buf.trim()); buf=""; return; }
+    if(/^\s*&\s*$/.test(t)){
+      if(SUFFIX.test(buf)){ if(buf.trim())parts.push(buf.trim()); buf=""; }
+      else buf+=" & ";
+      return;
+    }
+    buf+=t;
+  });
+  if(buf.trim()) parts.push(buf.trim());
+  return parts.filter(Boolean);
+}
+
 // ---------- Recorded documents (Registry of Deeds) ----------
 function initDeeds(){
   const el=document.getElementById("deeds"); if(!el) return;
@@ -1662,7 +1694,14 @@ function initDeeds(){
   // The registry indexes by INDIVIDUAL party name. A compound assessor owner
   // ("A LLC & B LLC & C LLC") returns nothing if searched whole, so split it and search the
   // PRIMARY entity — and say so, rather than silently returning an empty (misleading) result.
-  const parts=owner.split(/\s*&\s*|\s+AND\s+/i).map(s=>s.trim()).filter(Boolean);
+  // NB: "&" is ambiguous — it can separate co-owners ("A LLC & B LLC") OR sit INSIDE one
+  // owner's own legal name ("W & M Realty Inc"). Splitting on every "&" blindly turned
+  // "W & M REALTY INC AND WIENER LOUIS TRUSTEE" into "W" + "M REALTY INC" + "WIENER LOUIS
+  // TRUSTEE" — searching the registry for the single letter "W". Only accept an "&" as a
+  // co-owner boundary when the text collected so far ALREADY contains a legal-entity suffix
+  // (LLC/INC/CORP/etc) — i.e. it closed out a complete entity name already. " AND " (a full
+  // word, never embedded in a business name) is always a safe separator.
+  const parts=splitOwnerEntities(owner);
   const searchName=parts[0]||owner;
   const compound=parts.length>1;
   const compoundNote=compound
@@ -1769,6 +1808,18 @@ function renderDeeds(doc,cached){
     if(lienAge==null) h+='<b>'+c.liens+' lien'+(c.liens==1?"":"s")+'</b> recorded ('+esc(titlecase(ll.type||"lien"))+').';
     else if(lienHot) h+='<b style="color:#B3261E">Recent lien: '+esc(titlecase(ll.type||"lien"))+', '+esc(ll.date||"")+' ('+lienAge+' yr'+(lienAge==1?"":"s")+' old)</b> &mdash; worth verifying it&rsquo;s been resolved.';
     else h+='Newest lien ('+esc(titlecase(ll.type||"lien"))+') is <b>'+lienAge+' years old</b> &mdash; liens of this age are typically released or expired (federal tax liens self-release after 10 years), so very likely resolved.';
+    h+='</div>';
+  }
+
+  // market activity — this owner as SELLER (grantor) on a deed under this name. Since the
+  // registry indexes by name across the whole county, a grantor deed here is almost always a
+  // DIFFERENT property than the one being viewed (this owner would show as grantee on THIS
+  // property's own acquisition deed, not grantor) — direct evidence of active selling.
+  const ls=s.latest_sale_as_seller, saleAge=ls&&ls.age_years!=null?ls.age_years:null;
+  if(s.sales_as_seller_count&&ls){
+    h+='<div class="muted" style="margin:-4px 0 12px">';
+    if(saleAge!=null&&saleAge<=3) h+='<b style="color:#B3261E">Sold a property as seller '+esc(ls.date||"")+' ('+saleAge+' yr'+(saleAge==1?"":"s")+' ago)</b> to '+esc(smartTitle(deent(ls.buyer||"")))+' &mdash; recorded under this name, so almost certainly a different property from this one. Recent activity like this is a real signal this owner is actively selling.';
+    else h+='Most recent sale as seller under this name was <b>'+(saleAge!=null?saleAge+' years ago':esc(ls.date||""))+'</b> ('+esc(ls.date||"")+') &mdash; no recent transaction activity.';
     h+='</div>';
   }
 
