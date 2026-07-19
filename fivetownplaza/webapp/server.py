@@ -265,7 +265,14 @@ def search(q):
                 if not m:
                     continue
                 lo, hi = int(m.group(1)), int(m.group(2) or m.group(1))
-                if lo <= qnum <= hi:
+                # US street numbering runs odd/even on opposite sides — a range like
+                # "1055-1063" is the ODD side only. Numerically-inside-the-range but
+                # wrong-parity ("1060" inside "1055-1063") is NOT that parcel; it's an
+                # unlisted address on the other side of the street. Without this check,
+                # "1060 Main St" (Red Rose Pizzeria) silently matched "1055-1063 Main St"
+                # (Caring Health Center Inc) purely because 1060 falls between 1055 and
+                # 1063 numerically. Single-number ranges (lo==hi) have nothing to check.
+                if lo <= qnum <= hi and (lo == hi or qnum % 2 == lo % 2):
                     hits.append(p)
     else:
         # NAME query: a whole street, or an owner. NEVER a loose substring (that's what let
