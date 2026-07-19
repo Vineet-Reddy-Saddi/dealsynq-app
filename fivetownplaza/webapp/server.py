@@ -39,6 +39,7 @@ from research.keyword_crawler import crawl as research_crawl, generate_queries, 
 from springfield.zoning import lookup as zoning_lookup  # noqa: E402  ordinance detail per zoning code
 from deeds.hampden_browser import (fetch_records as deeds_fetch,  # noqa: E402
                                    summarize as deeds_summarize)  # registry of deeds (browser)
+from springfield.geocode import geocode  # noqa: E402  last-resort text->coords for landmarks
 CSV_PATH = os.path.join(ROOT, "outputs", "springfield_ownportal.csv")
 PROFILE_PATH = os.path.join(ROOT, "fivetownplaza", "PROFILE.json")
 RESEARCH_PATH = os.path.join(ROOT, "fivetownplaza", "RESEARCH.json")
@@ -56,6 +57,7 @@ KEEP = ["assessor_Parcel_Number", "assessor_Parcel_Address", "assessor_Owner_Nam
 PARCELS = []
 BY_OWNER = {}
 BY_APN = {}
+SPRINGFIELD_BBOX = None   # set by load(): (min_lat,min_lon,max_lat,max_lon) across all parcels
 
 _COORD = re.compile(r"-?\d{1,3}\.\d+")
 
@@ -179,6 +181,13 @@ def load():
             PARCELS.append(rec)
             BY_OWNER.setdefault(rec["owner"].upper(), []).append(rec)
             BY_APN[rec["apn"]] = rec
+    global SPRINGFIELD_BBOX
+    boxes = [p["bbox"] for p in PARCELS if p.get("bbox")]
+    if boxes:
+        # small buffer so a landmark right at the data's edge isn't rejected
+        pad_lat, pad_lon = 0.01, 0.01
+        SPRINGFIELD_BBOX = (min(b[0] for b in boxes) - pad_lat, min(b[1] for b in boxes) - pad_lon,
+                           max(b[2] for b in boxes) + pad_lat, max(b[3] for b in boxes) + pad_lon)
     print(f"  {len(PARCELS):,} parcels, {len(BY_OWNER):,} distinct owners loaded.")
 
 
@@ -312,6 +321,28 @@ def search(q):
         if owner_hits:
             hits, mode = owner_hits, "owner"
 
+    geocode_info = None
+    if not hits:
+        # LAST RESORT: text->coordinates via OSM geocoding, then point-in-parcel. This is
+        # what resolves a landmark NAME ("Hall of Fame") that never touches our address/
+        # street/owner index at all, or a public address whose numbering the assessor
+        # doesn't share (already handled for single-parcel streets above; this covers
+        # everything else). Always weaker evidence than a direct assessor match — never
+        # returned silently as if it were one (see mode="geocoded" handling below and in
+        # the frontend). Bounded to our own data's extent so an ambiguous name can't
+        # resolve to a same-named place in a different city.
+        try:
+            hit = geocode(raw, bbox=SPRINGFIELD_BBOX)
+        except Exception:
+            hit = None
+        if hit and SPRINGFIELD_BBOX and (
+                SPRINGFIELD_BBOX[0] <= hit["lat"] <= SPRINGFIELD_BBOX[2]
+                and SPRINGFIELD_BBOX[1] <= hit["lon"] <= SPRINGFIELD_BBOX[3]):
+            gp, how = find_parcel_at_point(hit["lat"], hit["lon"])
+            if gp:
+                hits, mode = [gp], "geocoded"
+                geocode_info = {"query": raw, "display_name": hit["display_name"], "how": how}
+
     if not hits:
         # No match. Offer other parcels on the SAME street (whole-street match, not substring).
         st = street_of(nq)
@@ -390,6 +421,7 @@ def search(q):
         "disposition": disposition_signals(anchor, owner, len(owner_parcels), enrichment, deep),
         "match_count": len(hits),
         "zip_warning": zip_warning,
+        "geocode": geocode_info,
         # how many OTHER parcels this owner holds that are NOT part of this property (they
         # aren't contiguous) — shown as context, never merged into the assemblage.
         "owner_other_parcels": owner_other_parcels,
@@ -633,6 +665,41 @@ def _deg_dist_m(lat1, lon1, lat2, lon2):
     dlat = (lat2 - lat1) * 111320.0
     dlon = (lon2 - lon1) * 111320.0 * max(0.15, math.cos(math.radians(lat0)))
     return math.hypot(dlat, dlon)
+
+
+# A geocoded point can miss every parcel's polygon by a few meters (sidewalk, parking edge,
+# OSM/assessor coordinate drift) — this is how far we'll still accept a "nearest" match, but
+# it's flagged as lower-confidence than a genuine polygon-contains match (see find_parcel_
+# at_point's `how` return value and search()'s "geocoded" mode handling).
+_NEAREST_FALLBACK_M = 40.0
+
+
+def find_parcel_at_point(lat, lon):
+    """Which parcel, if any, contains (lat, lon)? Used ONLY by the geocoding fallback (see
+    search()) — a last resort when address/street/owner text matching found nothing.
+
+    Returns (parcel, how) where how is "exact" (point genuinely inside the parcel's real
+    polygon — high confidence) or "nearest" (no polygon contained it, but this centroid is
+    within _NEAREST_FALLBACK_M — lower confidence, caller must say so), or (None, "none")."""
+    if lat is None or lon is None:
+        return None, "none"
+    # cheap bbox prefilter across all 42k parcels before the precise ring test
+    candidates = [p for p in PARCELS if p.get("bbox")
+                 and p["bbox"][0] <= lat <= p["bbox"][2] and p["bbox"][1] <= lon <= p["bbox"][3]]
+    for p in candidates:
+        ring = p.get("ring")
+        if ring and ring[0] and _point_in_ring(lat, lon, ring[0], ring[1]):
+            return p, "exact"
+    nearest, nearest_d = None, None
+    for p in PARCELS:
+        if p.get("lat") is None:
+            continue
+        d = _deg_dist_m(lat, lon, p["lat"], p["lon"])
+        if nearest_d is None or d < nearest_d:
+            nearest, nearest_d = p, d
+    if nearest and nearest_d <= _NEAREST_FALLBACK_M:
+        return nearest, "nearest"
+    return None, "none"
 
 
 def businesses_at(apn, lat, lon, land_sqft, deadline=None):
@@ -1487,6 +1554,7 @@ function render(d){
   const subtitle = deep ? (deep.anchor_address+"  &bull;  "+deep.property_subtype)
                         : (d.anchor_address+"  &bull;  "+(d.neighborhood||"Springfield, MA"));
   const badge = deep ? '<span class="badge" style="background:var(--verified)">DEEP PROFILE</span>'
+              : d.mode==="geocoded" ? '<span class="badge" style="background:var(--est)">GEOCODED &mdash; VERIFY</span>'
                      : '<span class="badge" style="background:var(--strong)">LIVE LOOKUP</span>';
 
   // header + KPIs
@@ -1508,6 +1576,19 @@ function render(d){
   // say so rather than silently presenting it as an exact address match.
   if(d.mode==="street-unique")
     h+='<div class="muted" style="margin-top:4px">The assessor records this property as <b>'+esc(smartTitle(d.anchor_address))+'</b> &mdash; the only parcel on this street, though the number you entered doesn&rsquo;t match its assessor range (common for landmarks whose public address differs from how the parcel is recorded).</div>';
+  // geocoded fallback: NEVER present this with the confidence of a direct assessor match —
+  // it's a third-party (OpenStreetMap) location estimate run through a point-in-parcel test,
+  // not a hit against our own address/owner index. "nearest" is explicitly weaker than
+  // "exact" (the point didn't fall inside any parcel's actual boundary, just close to one).
+  if(d.geocode){
+    const gc=d.geocode;
+    const howNote = gc.how==="exact"
+      ? "the geocoded point falls inside this parcel&rsquo;s boundary"
+      : "the geocoded point didn&rsquo;t fall inside any parcel boundary &mdash; this is the nearest one";
+    h+='<div class="note" style="margin:2px 0 10px"><b>&#9873; Approximate match &mdash; verify before relying on it.</b> '
+      +'&ldquo;'+esc(gc.query)+'&rdquo; was located via OpenStreetMap geocoding (resolved to &ldquo;'+esc(gc.display_name)+'&rdquo;), '
+      +'not matched directly against the assessor&rsquo;s address or owner records; '+howNote+'.</div>';
+  }
   h+='</div>';
 
   // ---- Businesses operating here + Building Footprint (OSM) ----
