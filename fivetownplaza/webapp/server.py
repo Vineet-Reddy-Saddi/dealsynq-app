@@ -55,6 +55,7 @@ KEEP = ["assessor_Parcel_Number", "assessor_Parcel_Address", "assessor_Owner_Nam
 
 PARCELS = []
 BY_OWNER = {}
+BY_APN = {}
 
 _COORD = re.compile(r"-?\d{1,3}\.\d+")
 
@@ -148,6 +149,15 @@ def load():
             lats, lons = _coords(gj)
             cen = (sum(lats) / len(lats), sum(lons) / len(lons)) if lats else None
             bb = (min(lats), min(lons), max(lats), max(lons)) if lats else None
+            # keep the actual vertex ring for point-in-polygon tests (businesses_at), not
+            # just its bounding box — a bbox is a poor proxy for an irregular lot shape (a
+            # rectangle drawn around an L-shaped or angled parcel includes area that isn't
+            # actually the property). Only for a simple single-ring Polygon: _coords()
+            # flattens ALL coordinate numbers in the GeoJSON regardless of ring structure,
+            # so a MultiPolygon (several disjoint parts) or a Polygon with holes would
+            # concatenate multiple rings into one bogus shape — skip those, bbox is the
+            # fallback (still used for the coarse OSM-query radius either way).
+            ring = (lats, lons) if (lats and "MultiPolygon" not in gj) else None
             rec = {
                 "apn": row["assessor_Parcel_Number"],
                 "address": addr,
@@ -162,11 +172,13 @@ def load():
                 "owner_mail": " ".join(x for x in [(row.get("assessor_Owner_Address1") or "").strip(),
                                                    (row.get("assessor_Owner_Address2") or "").strip()] if x),
                 "bbox": bb,
+                "ring": ring,
                 "lat": cen[0] if cen else None,
                 "lon": cen[1] if cen else None,
             }
             PARCELS.append(rec)
             BY_OWNER.setdefault(rec["owner"].upper(), []).append(rec)
+            BY_APN[rec["apn"]] = rec
     print(f"  {len(PARCELS):,} parcels, {len(BY_OWNER):,} distinct owners loaded.")
 
 
@@ -545,13 +557,75 @@ def site_at(apn, lat, lon, land_sqft, building_sqft, stories, deadline=None):
     return res
 
 
+def _bbox_union(parcels):
+    """Union bounding box (min_lat,min_lon,max_lat,max_lon) across a set of parcels, or
+    None if none of them have usable geometry."""
+    bxs = [p["bbox"] for p in parcels if p.get("bbox")]
+    if not bxs:
+        return None
+    return (min(b[0] for b in bxs), min(b[1] for b in bxs),
+            max(b[2] for b in bxs), max(b[3] for b in bxs))
+
+
+def _point_in_ring(lat, lon, lats, lons):
+    """Ray-casting point-in-polygon test against one vertex ring."""
+    n = len(lats)
+    inside = False
+    j = n - 1
+    for i in range(n):
+        yi, xi, yj, xj = lats[i], lons[i], lats[j], lons[j]
+        if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi + 1e-15) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def _on_parcel(lat, lon, parcels, bbox, buffer_m=15.0):
+    """Is (lat, lon) actually on one of these parcels? Uses the real polygon shape when a
+    parcel has a usable ring (accurate for irregular lots — a bbox rectangle around an
+    L-shaped or angled parcel wrongly includes area that isn't the property); falls back to
+    a buffered bounding-box test only for parcels with no ring. Returns None if we have
+    neither a ring nor a bbox to test against (unknown, not a claim either way)."""
+    if lat is None or lon is None:
+        return None
+    have_geometry = False
+    for p in parcels:
+        ring = p.get("ring")
+        if ring and ring[0]:
+            have_geometry = True
+            if _point_in_ring(lat, lon, ring[0], ring[1]):
+                return True
+    if have_geometry:
+        return False   # had real shapes to test against and matched none of them
+    if not bbox:
+        return None
+    lat0 = (bbox[0] + bbox[2]) / 2
+    gap_lat = buffer_m / 111320.0
+    gap_lon = buffer_m / (111320.0 * max(0.15, math.cos(math.radians(lat0))))
+    return (bbox[0] - gap_lat) <= lat <= (bbox[2] + gap_lat) and (bbox[1] - gap_lon) <= lon <= (bbox[3] + gap_lon)
+
+
+def _deg_dist_m(lat1, lon1, lat2, lon2):
+    """Cheap planar-approximation distance in meters (fine at this scale, no need for
+    full haversine)."""
+    lat0 = (lat1 + lat2) / 2
+    dlat = (lat2 - lat1) * 111320.0
+    dlon = (lon2 - lon1) * 111320.0 * max(0.15, math.cos(math.radians(lat0)))
+    return math.hypot(dlat, dlon)
+
+
 def businesses_at(apn, lat, lon, land_sqft, deadline=None):
     """Named businesses operating at/near this parcel (OSM). Cached; failures are not.
 
-    OSM is volunteer-mapped, so plenty of parcels have nothing on them. When the tight
-    (on-parcel) radius comes back empty we widen once to catch the immediate surroundings —
-    each result carries distance_m, so the page can be honest about what's actually ON the
-    parcel versus merely nearby.
+    OSM is volunteer-mapped, so plenty of parcels have nothing on them. Classification of
+    "on this parcel" vs. "merely nearby" uses the assemblage's REAL polygon shape when
+    available (point-in-polygon, not just a fixed-radius circle from the centroid) — a
+    blind radius sweeps in unrelated standalone businesses across the street for a large
+    commercial parcel (verified: at a 7.88-acre parcel, several OSM hits within the old
+    170m radius were genuinely outside the parcel boundary — a gas station, a nail salon
+    on a different lot, correctly excluded once the real shape is used instead of a
+    bounding-box guess). Falls back to a buffered bbox, then the old radius-only "widened"
+    flag, when a usable polygon isn't available.
 
     This can mean TWO sequential multi-mirror Overpass round-trips (narrow, then widen).
     `deadline` (an absolute time.time() value, shared with the sibling site_at() call) is
@@ -562,15 +636,34 @@ def businesses_at(apn, lat, lon, land_sqft, deadline=None):
     finished fine)."""
     if apn in BIZ_CACHE:
         return BIZ_CACHE[apn]
+    bbox, assemblage = None, []
+    anchor = BY_APN.get(apn)
+    if anchor:
+        owner_parcels = BY_OWNER.get(anchor["owner"].upper(), [anchor])
+        assemblage = assemblage_cluster(anchor, owner_parcels)
+        bbox = _bbox_union(assemblage)
     try:
         # scale search radius to parcel size (small pad/house = tight; big plaza = wide)
         radius = 60 if land_sqft < 20000 else 100 if land_sqft < 80000 else 170
+        if bbox:
+            # make sure the query circle fully covers the real boundary + a margin, even
+            # if the given lat/lon sits off-center relative to the assemblage's true extent
+            corners = ((bbox[0], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[1]), (bbox[2], bbox[3]))
+            corner_d = max(_deg_dist_m(lat, lon, c[0], c[1]) for c in corners)
+            radius = max(radius, min(400, round(corner_d) + 40))
         res = find_businesses(lat, lon, radius=radius, deadline=deadline)
         # only attempt the wider retry if there's meaningful time left on the SAME deadline
         if not res and (deadline is None or (deadline - time.time()) > 1.5):
             res = find_businesses(lat, lon, radius=300, timeout=7, deadline=deadline)  # widen once
             for r in res:      # flag these: they are NEAR the parcel, not on it
                 r["widened"] = True
+        # classify against the REAL boundary when we have one — overrides the coarse
+        # radius-implied flag above with an actual on/off-parcel determination.
+        if assemblage:
+            for r in res:
+                inside = _on_parcel(r.get("lat"), r.get("lon"), assemblage, bbox)
+                if inside is not None:
+                    r["widened"] = not inside
     except Exception as e:
         print(f"  [businesses {apn}] failed/slow: {e}")
         return None

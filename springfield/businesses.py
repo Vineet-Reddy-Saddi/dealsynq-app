@@ -98,6 +98,10 @@ out center tags {limit * 4};"""
             "brand": t.get("brand"),
             "cuisine": t.get("cuisine"),
             "distance_m": dist,
+            # the POI's own coordinates — callers use this for point-in-parcel-boundary
+            # filtering (a fixed-radius circle sweeps in unrelated businesses across the
+            # street for a large parcel; the actual parcel geometry doesn't).
+            "lat": c.get("lat"), "lon": c.get("lon"),
         })
     out.sort(key=lambda x: (x["distance_m"] is None, x["distance_m"] or 0))
     return out[:limit]
