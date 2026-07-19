@@ -60,6 +60,8 @@ PARCELS = []
 BY_OWNER = {}
 BY_APN = {}
 SPRINGFIELD_BBOX = None   # set by load(): (min_lat,min_lon,max_lat,max_lon) across all parcels
+CITY_ZIPS = set()         # every ZIP seen in the assessor data (the citywide postal set)
+CITY_ZIP_PREFIXES = set() # their 3-digit prefixes — unique institutional ZIPs share these
 
 _COORD = re.compile(r"-?\d{1,3}\.\d+")
 
@@ -183,6 +185,9 @@ def load():
             PARCELS.append(rec)
             BY_OWNER.setdefault(rec["owner"].upper(), []).append(rec)
             BY_APN[rec["apn"]] = rec
+            if rec["zip"] and len(rec["zip"]) == 5:
+                CITY_ZIPS.add(rec["zip"])
+                CITY_ZIP_PREFIXES.add(rec["zip"][:3])
     global SPRINGFIELD_BBOX
     boxes = [p["bbox"] for p in PARCELS if p.get("bbox")]
     if boxes:
@@ -358,12 +363,19 @@ def search(q):
     # pick the highest-assessed matching parcel as the anchor, resolve its owner
     anchor = max(hits, key=lambda p: p["assessed"])
     owner = anchor["owner"]
-    # if the query carried a ZIP that disagrees with the matched parcel's ZIP, warn rather
-    # than silently resolving (a wrong ZIP shouldn't quietly return a plausible-looking hit)
+    # ZIP sanity check. The assessor parcel ZIP is NOT postal ground truth — large
+    # institutions legitimately publish their own unique ZIPs (Baystate = 01199 while its
+    # parcel is recorded 01107), and USPS boundaries don't track parcel records. So a
+    # mismatch against the PARCEL's zip must never be called "wrong". Instead, validate
+    # against the CITYWIDE zip set (all zips in the dataset + the city's 3-digit prefix,
+    # which unique/institutional zips share) and only warn when the entered zip isn't
+    # plausible for Springfield at all (99999, a Boston zip, ...). This also closes the
+    # earlier bypass where a parcel with a blank zip (e.g. 380 Cooley St) skipped the
+    # check entirely.
     qzip = zip_of(raw)
     zip_warning = None
-    if qzip and anchor.get("zip") and qzip != anchor["zip"]:
-        zip_warning = (f"You entered ZIP {qzip}, but this parcel is in {anchor['zip']}. "
+    if qzip and CITY_ZIPS and qzip not in CITY_ZIPS and qzip[:3] not in CITY_ZIP_PREFIXES:
+        zip_warning = (f"ZIP {qzip} doesn't look like a Springfield, MA ZIP code. "
                        "Showing the address match — double-check it's the right property.")
     # the assemblage is the CONTIGUOUS cluster around the anchor, not every parcel the
     # owner holds (same owner != same property — see assemblage_cluster).
@@ -390,11 +402,19 @@ def search(q):
         # ceiling the whole search hangs "forever". Cap it; on timeout we return the parcel
         # with enrichment=None (the frontend shows the record card as unavailable + retry)
         # rather than blocking the result.
+        # NB: deliberately NOT `with ThreadPoolExecutor(...)` — the context manager's exit
+        # calls shutdown(wait=True), which BLOCKS on the still-running enrich thread even
+        # after result(timeout=14) has already raised. That silently turned the 14s cap
+        # into "however long the stalled scrape takes" (~36s observed on 299 Sumner Ave).
+        # shutdown(wait=False) returns immediately; the orphaned thread finishes (and
+        # warms ENRICH_CACHE) in the background without holding up this response.
+        ex = ThreadPoolExecutor(max_workers=1)
         try:
-            with ThreadPoolExecutor(max_workers=1) as ex:
-                enrichment = ex.submit(enrich, anchor["apn"]).result(timeout=14)
+            enrichment = ex.submit(enrich, anchor["apn"]).result(timeout=14)
         except Exception:
             enrichment = None
+        finally:
+            ex.shutdown(wait=False)
 
     bsqft = 336205 if deep else (enrichment or {}).get("total_building_sqft") or 0
     stories = None
@@ -500,10 +520,14 @@ def _owner_posture(owner, parcel_count, deep):
     # nonprofits). Also checked BEFORE the LLC/Inc test — "BAYSTATE MEDICAL CENTER INC" is a
     # hospital, not an "active investor"; "MASS MUTUAL ... INSURANCE CO" is an insurer, not an
     # individual. These hold for mission/long-term reasons, so they lower disposition odds.
-    if re.search(r"HOSPITAL|MEDICAL CENTER|\bMEDICAL\b|HEALTH ?CARE|\bHEALTH\b|CLINIC|"
-                 r"UNIVERSITY|COLLEGE|ACADEMY|\bSCHOOL\b|EDUCAT|"
-                 r"CHURCH|TEMPLE|SYNAGOGUE|MOSQUE|PARISH|DIOCESE|ARCHDIOCESE|MINISTR|CONGREGATION|"
-                 r"FOUNDATION|NON.?PROFIT|ASSOCIATION|\bSOCIETY\b|MUSEUM|LIBRARY|\bYMCA\b|\bYWCA\b|"
+    # NB: \bHOSPITALS?\b — the closing word boundary is load-bearing. A bare "HOSPITAL"
+    # substring-matches "HOSPITALITY", turning hotel operators ("MITTAS HOSPITALITY LLC")
+    # into institutions. Same care with the other stems: MINISTR/EDUCAT are DELIBERATE
+    # prefixes (Ministry/Ministries, Education/Educational), the rest are word-bounded.
+    if re.search(r"\bHOSPITALS?\b|MEDICAL CENTER|\bMEDICAL\b|HEALTH ?CARE|\bHEALTH\b|\bCLINIC\b|"
+                 r"UNIVERSITY|\bCOLLEGE\b|\bACADEMY\b|\bSCHOOL\b|EDUCAT|"
+                 r"\bCHURCH\b|\bTEMPLE\b|SYNAGOGUE|MOSQUE|\bPARISH\b|DIOCESE|ARCHDIOCESE|MINISTR|CONGREGATION|"
+                 r"FOUNDATION|NON.?PROFIT|ASSOCIATION|\bSOCIETY\b|\bMUSEUM\b|\bLIBRARY\b|\bYMCA\b|\bYWCA\b|"
                  r"INSURANCE|MUTUAL LIFE|MASS ?MUTUAL", name):
         return ("Institutional owner", "institutional / mission-driven owner (health, education, "
                 "religious, nonprofit or insurer) — holds long-term, rarely an opportunistic seller",
@@ -582,6 +606,20 @@ def disposition_signals(anchor, owner, owner_parcel_count, enrichment, deep):
             add("vintage", "Property vintage", f"built ~{aby} (~{age} yrs), no major permit in 5 yrs — reinvest-or-sell pressure", "raises", 1, "Assessor record card", "verified")
         else:
             add("vintage", "Property vintage", f"built ~{aby} (~{age} yrs)", "neutral", 0, "Assessor record card", "verified")
+
+    # Government owner: hold-period and vintage are PRIVATE-market signals — "held 40 yrs,
+    # mature phase" and "old building, reinvest-or-sell pressure" describe how commercial
+    # investors behave, not how a city or public authority holds civic assets (they hold
+    # indefinitely and dispose through political/administrative processes, not market
+    # timing). Counting those signals pushed a convention center to "Moderate". Neutralize
+    # them (weight 0, with the reason stated in the finding) rather than counter-weighting
+    # the posture factor — the signals don't apply, so they shouldn't vote at all.
+    if ptype.startswith("Government"):
+        for f in factors:
+            if f["key"] in ("hold", "vintage") and f["weight"] > 0:
+                f["weight"] = 0
+                f["direction"] = "neutral"
+                f["finding"] += " — not treated as a sale signal for a government/public owner"
 
     return {
         "factors": factors,
@@ -812,9 +850,10 @@ def enrich(apn):
 # polls for progress. A pre-built RESEARCH.json (the flagship Five Town Plaza run) is
 # served instantly; any other address runs live but with a conservative query cap so a
 # demo viewer can't get the host IP rate-limited.
-LIVE_MAX_QUERIES = 34      # cap for on-demand live runs (full cached runs are larger)
-LIVE_PER_QUERY = 12
-LIVE_PACE = (2.5, 4.5)
+LIVE_MAX_QUERIES = 24      # cap for on-demand live runs (full cached runs are larger)
+LIVE_PER_QUERY = 10
+LIVE_PACE = (1.5, 3.0)
+RESEARCH_MAX_SECONDS = 90  # HARD overall ceiling — return partial rather than run 400s+
 
 # Route live research through the shared Decodo proxy pool when available. DuckDuckGo
 # rate-limits repeated searches per IP; rotating proxy IPs both improves reliability
@@ -882,7 +921,8 @@ def _run_research_job(job_id, address, name):
     try:
         doc = research_crawl(address, name=name, per_query=LIVE_PER_QUERY, pace=LIVE_PACE,
                              proxies_pool=RESEARCH_PROXIES, progress_cb=progress,
-                             max_queries=LIVE_MAX_QUERIES)
+                             max_queries=LIVE_MAX_QUERIES, max_seconds=RESEARCH_MAX_SECONDS,
+                             should_stop=lambda: job.get("cancelled"))
         job["result"] = doc
         job["status"] = "done"
         RESEARCH_DONE[normalize_addr(address)] = doc
@@ -904,6 +944,12 @@ def start_research(address, name=None):
         for jid, j in RESEARCH_JOBS.items():
             if j["norm"] == norm and j["status"] == "running":
                 return {"status": "running", "job": jid, "total": j["total"]}
+        # a live research run for a DIFFERENT address means the user moved on — cancel those
+        # so an abandoned crawl stops consuming the host's (rate-limited) IP + threads
+        # instead of running to completion for a page nobody is watching.
+        for j in RESEARCH_JOBS.values():
+            if j["status"] == "running" and j["norm"] != norm:
+                j["cancelled"] = True
         job_id = uuid.uuid4().hex[:12]
         total = min(len(generate_queries(address, name)), LIVE_MAX_QUERIES)
         RESEARCH_JOBS[job_id] = {"status": "running", "norm": norm, "done": 0,
@@ -997,7 +1043,32 @@ def research_status(job_id):
 
 
 # ---- HTTP handler --------------------------------------------------------
+# Security headers on every response (defense in depth — no exploitable XSS was found in
+# testing, but these harden against classes of attack rather than specific bugs):
+#   CSP        — inline script/style are required (the whole frontend is one inline page),
+#                but connect/img/frame/object are locked down; fonts allowed from Google
+#                Fonts (the only external resource the page loads).
+#   HSTS       — Render terminates TLS for us; pin browsers to HTTPS.
+#   nosniff / frame-ancestors / X-Frame-Options — MIME-sniffing + clickjacking protection.
+#   Referrer-Policy — don't leak searched addresses to external sites via Referer.
+_SEC_HEADERS = [
+    ("Content-Security-Policy",
+     "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+     "font-src https://fonts.gstatic.com; img-src 'self' data:; "
+     "connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"),
+    ("Strict-Transport-Security", "max-age=31536000; includeSubDomains"),
+    ("X-Content-Type-Options", "nosniff"),
+    ("X-Frame-Options", "DENY"),
+    ("Referrer-Policy", "no-referrer"),
+]
+
+
 class Handler(BaseHTTPRequestHandler):
+    # don't advertise "BaseHTTP/0.6 Python/3.12" in the Server header
+    server_version = "DealSynq"
+    sys_version = ""
+
     def log_message(self, *a):
         pass
 
@@ -1006,6 +1077,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(b)))
+        for k, v in _SEC_HEADERS:
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(b)
 
@@ -1258,10 +1331,11 @@ PAGE = r"""<!doctype html>
   /* research filter chips */
   .rchips{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 2px}
   .rchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 13px;
-       font-size:12px;color:var(--navy);font-weight:600;cursor:pointer;
+       font-size:12px;color:var(--navy);font-weight:600;cursor:pointer;font-family:inherit;line-height:1.4;
        transition:background .15s ease,border-color .15s ease,color .15s ease}
   .rchip b{color:var(--gold);font-weight:800;font-feature-settings:"tnum"}
   .rchip:hover{border-color:var(--gold2);background:#FBF6E9}
+  .rchip:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
   .rchip.on{background:var(--navy);border-color:var(--navy);color:#fff}
   .rchip.on b{color:var(--gold3)}
 
@@ -1507,18 +1581,20 @@ async function run(){
   if(d.extra_params) loadExtras(d.extra_params, gen);  // fire-and-forget, background, never blocks
 }
 
-// per-source copy for the Businesses Operating Here card — keeps the honesty caveats
+// per-source copy for the Businesses Reported Here card — keeps the honesty caveats
 // specific to whichever source actually answered (see businesses_at()'s source priority:
-// Foursquare -> Yelp -> OpenStreetMap) instead of always assuming one.
+// Foursquare -> Yelp -> OpenStreetMap). NO source gets to claim "operating"/"current":
+// every one of these is a third-party directory that can lag closures and rebrands, so
+// the copy consistently says REPORTED, shows distances, and asks for verification.
 const BIZ_SOURCE_LABELS={
-  foursquare:{label:"live from Foursquare", verb:"listed",
-    found:'<b>Businesses listed at this location</b> on Foursquare &mdash; kept current by the businesses themselves (open/closed status tracked), meaningfully more reliable than volunteer-mapped data. Still worth a quick verify for anything time-sensitive.',
-    empty:'No businesses are listed at or near this parcel on Foursquare &mdash; likely a residential property, vacant lot, or a business too new/small to be listed yet. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.'},
-  yelp:{label:"live from Yelp", verb:"listed",
-    found:'<b>Businesses listed at this location</b> on Yelp &mdash; kept current by the businesses themselves (open/closed status, category), meaningfully more reliable than volunteer-mapped data. Still worth a quick verify for anything time-sensitive.',
-    empty:'No businesses are listed at or near this parcel on Yelp &mdash; likely a residential property, vacant lot, or a business too new/small to be listed yet. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.'},
-  osm:{label:"live from OpenStreetMap", verb:"mapped",
-    found:'<b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.',
+  foursquare:{label:"reported by Foursquare &bull; third-party, possibly outdated", verb:"listed",
+    found:'<b>Businesses reported at or near this parcel</b> by Foursquare. Third-party directory data &mdash; listings can lag closures and rebrands, so treat these as reported occupants, <b>not confirmed current operators</b>, and verify before relying on any one. Distances shown per listing.',
+    empty:'No businesses are listed at or near this parcel on Foursquare &mdash; could be a residential property, vacant lot, or a business too new/small to be listed. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.'},
+  yelp:{label:"reported by Yelp &bull; third-party, possibly outdated", verb:"listed",
+    found:'<b>Businesses reported at or near this parcel</b> by Yelp. Third-party directory data &mdash; listings can lag closures and rebrands, so treat these as reported occupants, <b>not confirmed current operators</b>, and verify before relying on any one. Distances shown per listing.',
+    empty:'No businesses are listed at or near this parcel on Yelp &mdash; could be a residential property, vacant lot, or a business too new/small to be listed. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.'},
+  osm:{label:"reported by OpenStreetMap &bull; volunteer-mapped, possibly outdated", verb:"mapped",
+    found:'<b>Businesses reported at or near this parcel</b> in OpenStreetMap. Volunteer-maintained &mdash; a name can lag a closure/rebrand by years: treat these as mapped occupants, <b>not confirmed current operators</b>, and verify before relying on any one. Distances shown per listing.',
     empty:'No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>.'},
 };
 function renderExtraCards(bizResult,st,failReason){
@@ -1530,7 +1606,7 @@ function renderExtraCards(bizResult,st,failReason){
   const meta = BIZ_SOURCE_LABELS[bizResult ? bizResult.source : "osm"] || BIZ_SOURCE_LABELS.osm;
   // ALWAYS render this section, for every address. An empty result is information too —
   // silently hiding the card just looks broken.
-  h+='<div class="card"><h3 class="sec">Businesses Operating Here <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; '+meta.label+'</span></h3>';
+  h+='<div class="card"><h3 class="sec">Businesses Reported Here <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; '+meta.label+'</span></h3>';
   if(biz&&biz.length){
     // the server flags results that only turned up after widening the search (OSM path) or
     // fell outside the real parcel boundary (any source) — those are NEAR the parcel, not
@@ -1613,8 +1689,13 @@ function render(d){
   const name = deep ? deep.property_name : (smartTitle(d.owner) || "Property");
   const subtitle = deep ? (deep.anchor_address+"  &bull;  "+deep.property_subtype)
                         : (d.anchor_address+"  &bull;  "+(d.neighborhood||"Springfield, MA"));
+  // Any mode where the shown parcel is NOT an exact assessor-address match for what the
+  // user typed gets the amber "verify" badge — "LIVE LOOKUP" is reserved for exact matches.
+  // (street-unique: the number didn't match the assessor's range; geocoded: resolved via a
+  // third-party location estimate. Both are plausible, neither is authoritative.)
+  const approx = d.mode==="geocoded" || d.mode==="street-unique";
   const badge = deep ? '<span class="badge" style="background:var(--verified)">DEEP PROFILE</span>'
-              : d.mode==="geocoded" ? '<span class="badge" style="background:var(--est)">GEOCODED &mdash; VERIFY</span>'
+              : approx ? '<span class="badge" style="background:var(--est)">APPROXIMATE PARCEL &mdash; VERIFY</span>'
                      : '<span class="badge" style="background:var(--strong)">LIVE LOOKUP</span>';
 
   // header + KPIs
@@ -1798,7 +1879,7 @@ function ownerEntity(name){
   // that happens to be incorporated ("...MEDICAL CENTER INC") isn't mislabeled a corporation
   // — keeping this card consistent with the Disposition card's owner-posture read.
   if(/\bCITY OF\b|\bTOWN OF\b|COMMONWEALTH|UNITED STATES|\bCOUNTY\b|AUTHORITY|\bAUTH\b|COMMISSION|DEPARTMENT|HOUSING AUTH/.test(n)) return ["Gov","Government / public"];
-  if(/HOSPITAL|MEDICAL|\bHEALTH\b|CLINIC|UNIVERSITY|COLLEGE|ACADEMY|\bSCHOOL\b|CHURCH|TEMPLE|SYNAGOGUE|PARISH|DIOCESE|MINISTR|FOUNDATION|NON.?PROFIT|ASSOCIATION|\bSOCIETY\b|MUSEUM|LIBRARY|INSURANCE|MUTUAL LIFE|MASS ?MUTUAL/.test(n)) return ["Institutional","Institutional owner"];
+  if(/\bHOSPITALS?\b|\bMEDICAL\b|\bHEALTH\b|\bCLINIC\b|UNIVERSITY|\bCOLLEGE\b|\bACADEMY\b|\bSCHOOL\b|\bCHURCH\b|\bTEMPLE\b|SYNAGOGUE|\bPARISH\b|DIOCESE|MINISTR|FOUNDATION|NON.?PROFIT|ASSOCIATION|\bSOCIETY\b|\bMUSEUM\b|\bLIBRARY\b|INSURANCE|MUTUAL LIFE|MASS ?MUTUAL/.test(n)) return ["Institutional","Institutional owner"];
   if(/\bLLC\b|\bL L C\b/.test(n)) return ["LLC","Investment entity (LLC)"];
   if(/\bLP\b|\bLLP\b|LIMITED PARTNERSHIP/.test(n)) return ["LP","Investment entity (LP)"];
   if(/\bINC\b|CORP|COMPANY/.test(n)) return ["Corp","Corporation"];
@@ -1857,8 +1938,15 @@ function dispAugmentFactors(){
   const dd=(window.__lastDeedsKey===window.__propKey)?window.__lastDeeds:null;
   if(dd&&dd.summary){
     const lm=dd.summary.latest_mortgage;
-    if(!dd.summary.counts.mortgages){
-      extra.push({key:"debt",label:"Debt",finding:"no mortgage recorded — all-cash / no refinance cliff",direction:"neutral",weight:0,source:"Registry of Deeds",confidence:"verified"});
+    if(!dd.summary.total){
+      // ZERO documents under this name is NOT evidence of anything — the registry indexes
+      // by name, and individual owners are frequently recorded under a different format.
+      // Absence of evidence, never "verified all-cash". A title search is the real answer.
+      extra.push({key:"debt",label:"Debt",finding:"no documents found under this search name — mortgage status unknown (the registry indexes by name, and the owner may be recorded differently); a title search is required to confirm",direction:"neutral",weight:0,source:"Registry of Deeds (name search)",confidence:"unresolved"});
+    } else if(!dd.summary.counts.mortgages){
+      // documents DO exist under this name but none is a mortgage — meaningful, but still
+      // not proof of all-cash: a mortgage could sit under a co-owner/prior name variant.
+      extra.push({key:"debt",label:"Debt",finding:"documents exist under this name but no mortgage among them — consistent with an all-cash hold, though not proof (a mortgage could be recorded under a name variant); title search to confirm",direction:"neutral",weight:0,source:"Registry of Deeds (name search)",confidence:"moderate"});
     } else if(lm&&lm.age_years!=null){
       const a=lm.age_years;
       if(a<=3) extra.push({key:"debt",label:"Debt maturity",finding:"financed ~"+a+" yr ago — recently committed, unlikely to sell short-term",direction:"lowers",weight:-1,source:"Registry of Deeds",confidence:"strong"});
@@ -2045,8 +2133,12 @@ function renderDeeds(doc,cached){
   if(c.easements) h+='<div class="dpill"><b>'+c.easements+'</b>easement'+(c.easements==1?"":"s")+'</div>';
   h+='</div>';
   h+='<div class="muted" style="margin:6px 0 12px">';
-  if(!c.mortgages){
-    h+='<b style="color:var(--verified)">No mortgage recorded under this name.</b>';
+  if(!s.total){
+    // ZERO documents = the name search found nothing at all — status UNKNOWN, never a
+    // green "no mortgage" claim (the owner may simply be indexed under a different name).
+    h+='<b style="color:var(--unres)">No documents found under this search name &mdash; mortgage status unknown.</b> A title search is required to confirm; this is not evidence of a clean title or an all-cash purchase.';
+  } else if(!c.mortgages){
+    h+='<b>No mortgage among the documents recorded under this name</b> &mdash; consistent with an all-cash hold, though a mortgage could still sit under a name variant.';
   } else {
     // age-tiered, honest read — never call a decades-old loan "recent"
     let tier;
@@ -2153,7 +2245,7 @@ function initResearch(){
     +'(sale &amp; listing, tenants, ownership, permits, zoning, environmental, legal, tax, news&hellip;) through DuckDuckGo &amp; Mojeek '
     +'&mdash; not Google, which blocks scrapers &mdash; then dedupes them into one ranked list of sources.</div>'
     +'<button class="rbtn" id="rgo">'+(deep?"Load research (cached)":"Run web research")+'</button>'
-    +'<span class="muted" id="rnote" style="margin-left:12px">'+(deep?"instant &bull; pre-built for this flagship property":"~60&ndash;120s live &bull; paced to avoid rate-limits")+'</span>'
+    +'<span class="muted" id="rnote" style="margin-left:12px">'+(deep?"instant &bull; pre-built for this flagship property":"up to ~90s live &bull; paced to avoid rate-limits; returns partial results if it runs long")+'</span>'
     +'<div id="rbody"></div>';
   document.getElementById("rgo").onclick=()=>runResearch(addr,name,GEN);
   if(deep) runResearch(addr,name,gen);   // flagship: auto-load the cached result
@@ -2187,15 +2279,22 @@ function renderResearch(doc,cached){
   const body=document.getElementById("rbody"); if(!body) return;
   const eng=Object.entries(doc.engines_used||{}).map(([k,v])=>k+" "+v).join(" &bull; ");
   let h='<div class="kpis" style="margin:14px 0 4px">';
-  h+=kpi(doc.query_count,"Queries Run");
+  // honest count: queries actually RUN, not the total planned (they can differ when the
+  // crawl stops early on its time budget)
+  const qrun=(doc.queries_run!=null?doc.queries_run:doc.query_count);
+  h+=kpi(qrun+(doc.query_count&&qrun<doc.query_count?(" / "+doc.query_count):""),"Queries Run");
   h+=kpi(doc.unique_url_count,"Unique Sites");
   h+=kpi(doc.unique_domain_count,"Domains");
   h+=kpi(doc.elapsed_seconds+"s",cached?"Run Time (cached)":"Run Time");
   h+='</div>';
-  // category filter chips
+  if(doc.partial) h+='<div class="note" style="margin:2px 0 8px">&#9888; <b>Partial results</b> &mdash; the sweep hit its time budget and stopped early ('+qrun+' of '+doc.query_count+' queries). What&rsquo;s shown is real; it&rsquo;s just not the complete sweep.</div>';
+  // category filter chips — real <button>s (keyboard-focusable, Enter/Space activate,
+  // aria-pressed announces the active filter to screen readers). role=group + label names
+  // the set. Previously non-interactive <span>s: mouse-only, invisible to assistive tech.
   const cats=Object.keys(doc.categories||{});
-  h+='<div class="rchips" id="rchips"><span class="rchip on" data-cat="__all">All <b>'+doc.unique_url_count+'</b></span>';
-  cats.forEach(c=>{h+='<span class="rchip" data-cat="'+esc(c)+'">'+esc(c)+' <b>'+doc.categories[c].length+'</b></span>';});
+  h+='<div class="rchips" id="rchips" role="group" aria-label="Filter research sources by category">';
+  h+='<button type="button" class="rchip on" data-cat="__all" aria-pressed="true">All <b>'+doc.unique_url_count+'</b></button>';
+  cats.forEach(c=>{h+='<button type="button" class="rchip" data-cat="'+esc(c)+'" aria-pressed="false">'+esc(c)+' <b>'+doc.categories[c].length+'</b></button>';});
   h+='</div>';
   // source list (all, ranked) — filtered client-side by chip
   h+='<div id="rlist"></div>';
@@ -2207,8 +2306,8 @@ function renderResearch(doc,cached){
   renderDisposition();   // refine the disposition read with an active-listing check
   drawSources("__all");
   document.querySelectorAll("#rchips .rchip").forEach(c=>c.onclick=()=>{
-    document.querySelectorAll("#rchips .rchip").forEach(x=>x.classList.remove("on"));
-    c.classList.add("on"); drawSources(c.dataset.cat);
+    document.querySelectorAll("#rchips .rchip").forEach(x=>{x.classList.remove("on");x.setAttribute("aria-pressed","false");});
+    c.classList.add("on"); c.setAttribute("aria-pressed","true"); drawSources(c.dataset.cat);
   });
 }
 

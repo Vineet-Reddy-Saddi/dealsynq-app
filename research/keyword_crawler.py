@@ -363,12 +363,23 @@ def _is_junk(url):
     return host in _SKIP_HOSTS or "/y.js" in url
 
 
-def crawl(address, name=None, per_query=25, pace=(2.0, 4.0), proxies_pool=None,
-          progress_cb=None, max_queries=None):
+def crawl(address, name=None, per_query=12, pace=(2.0, 4.0), proxies_pool=None,
+          progress_cb=None, max_queries=None, max_seconds=90, should_stop=None):
     """Run the full research crawl for one property.
 
     progress_cb(done, total, query, n_found) is called after each query so a UI can
     show live progress. Returns the assembled research document (a dict).
+
+    max_seconds: HARD overall wall-clock ceiling. Without it the runtime was
+    unbounded — 34 queries x (up to a 25s per-query search + pacing) reached 435s in
+    testing, against a UI that promised ~60-120s. When the budget is spent we stop and
+    return PARTIAL results (flagged `partial: True`), which is far more useful than a
+    complete-but-10x-too-slow crawl. per_query is also lower now (12s) so no single
+    engine hang eats a big share of the budget.
+
+    should_stop(): optional callable returning True when the caller has abandoned the job
+    (user navigated away) — checked each iteration so an orphaned crawl stops consuming
+    resources instead of running to completion for a page nobody is watching.
     """
     queries = generate_queries(address, name)
     if max_queries:
@@ -379,9 +390,22 @@ def crawl(address, name=None, per_query=25, pace=(2.0, 4.0), proxies_pool=None,
     errors = []
     engines_used = {}
     started = time.time()
+    partial = False
+    queries_run = 0
 
     for i, q in enumerate(queries, 1):
-        results, engine, reason = search_one(q["query"], per_query=per_query,
+        # stop early on an abandoned job or a blown time budget — return what we have
+        if should_stop and should_stop():
+            partial = True
+            break
+        if time.time() - started > max_seconds:
+            partial = True
+            break
+        # shrink the per-query budget as we approach the deadline so the last few queries
+        # can't overshoot it
+        remaining = max_seconds - (time.time() - started)
+        pq = max(4, min(per_query, int(remaining)))
+        results, engine, reason = search_one(q["query"], per_query=pq,
                                              proxies_pool=proxies_pool)
         if reason and not results:
             errors.append({"query": q["query"], "reason": reason})
@@ -418,6 +442,7 @@ def crawl(address, name=None, per_query=25, pace=(2.0, 4.0), proxies_pool=None,
             if not rec["snippet"] and res["snippet"]:
                 rec["snippet"] = res["snippet"]
 
+        queries_run = i
         if progress_cb:
             progress_cb(i, total, q["query"], len(results))
         # polite pacing between queries (skip after the final one)
@@ -455,6 +480,8 @@ def crawl(address, name=None, per_query=25, pace=(2.0, 4.0), proxies_pool=None,
         "engines_used": engines_used,
         "elapsed_seconds": round(time.time() - started, 1),
         "query_count": total,
+        "queries_run": queries_run,
+        "partial": partial,   # True if we stopped on the time budget or an abandoned job
         "queries": [q["query"] for q in queries],
         "unique_url_count": len(sources),
         "unique_domain_count": len(by_domain),
