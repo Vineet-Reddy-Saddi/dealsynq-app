@@ -274,6 +274,20 @@ def search(q):
                 # 1063 numerically. Single-number ranges (lo==hi) have nothing to check.
                 if lo <= qnum <= hi and (lo == hi or qnum % 2 == lo % 2):
                     hits.append(p)
+            # The typed number can legitimately not match ANY assessor range — a landmark's
+            # public/mailing address (Google Maps, signage) is often not how the assessor
+            # numbered the parcel: MGM Springfield's real address is "1 MGM Way" but its
+            # parcel is recorded as "12-24 MGM Way"; a private access road can be numbered
+            # entirely differently from its public entrance. When the named street has
+            # EXACTLY ONE parcel, there is no ambiguity about which property was meant —
+            # auto-resolve to it rather than making the user click through a suggestion.
+            # (A street with many parcels, e.g. Cooley St, still requires disambiguation —
+            # this only fires when there is nothing else it could be.)
+            if not hits:
+                same_street = [p for p in PARCELS if street_of(p["norm"]) == qstreet]
+                if len(same_street) == 1:
+                    hits = same_street
+                    mode = "street-unique"
     else:
         # NAME query: a whole street, or an owner. NEVER a loose substring (that's what let
         # "LLC" match "HILLCREST" and "Main St" match every Main St parcel).
@@ -1489,6 +1503,11 @@ function render(d){
   // when an OWNER search resolved to one of several holdings, say which (transparency)
   if(d.mode==="owner" && d.match_count>1)
     h+='<div class="muted" style="margin-top:4px">Owner search &mdash; showing the highest-assessed of <b>'+d.match_count+'</b> parcels indexed under this name. Enter a full street address to pinpoint a specific one.</div>';
+  // the typed house number didn't match this parcel's assessor range, but it's the ONLY
+  // parcel on that street, so there was nothing else it could be (see search() comment) —
+  // say so rather than silently presenting it as an exact address match.
+  if(d.mode==="street-unique")
+    h+='<div class="muted" style="margin-top:4px">The assessor records this property as <b>'+esc(smartTitle(d.anchor_address))+'</b> &mdash; the only parcel on this street, though the number you entered doesn&rsquo;t match its assessor range (common for landmarks whose public address differs from how the parcel is recorded).</div>';
   h+='</div>';
 
   // ---- Businesses operating here + Building Footprint (OSM) ----
