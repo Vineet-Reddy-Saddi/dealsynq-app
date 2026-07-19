@@ -34,7 +34,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, ROOT)
 from springfield.record_card import fetch_parcel  # noqa: E402  live per-parcel enrichment
 from springfield.businesses import find_businesses  # noqa: E402  OSM business/tenant lookup
-from springfield.yelp import find_businesses_yelp  # noqa: E402  Yelp business lookup (primary)
+from springfield.yelp import find_businesses_yelp  # noqa: E402  Yelp business lookup (dormant, paid)
+from springfield.foursquare import find_businesses_foursquare  # noqa: E402  Foursquare (primary, free)
 from springfield.footprint import site_metrics  # noqa: E402  OSM footprint + aerial estimates
 from research.keyword_crawler import crawl as research_crawl, generate_queries, load_proxies  # noqa: E402
 from springfield.zoning import lookup as zoning_lookup  # noqa: E402  ordinance detail per zoning code
@@ -706,14 +707,16 @@ def find_parcel_at_point(lat, lon):
 def businesses_at(apn, lat, lon, land_sqft, deadline=None):
     """Named businesses operating at/near this parcel. Cached; failures are not.
 
-    PRIMARY source: Yelp Fusion (real listings, kept current by the businesses themselves —
-    only used if YELP_API_KEY is configured; see springfield/yelp.py). FALLBACK: OpenStreetMap
-    Overpass (free, no key, but volunteer-mapped and often sparse for small multi-tenant
-    buildings — see springfield/businesses.py). The fallback only fires when Yelp is
-    unconfigured or its call itself fails; a Yelp call that succeeds with zero results is
-    trusted as real information (Yelp found genuinely nothing nearby), not treated as a
-    failure to fall back from. The returned dict's "source" field tells the caller which one
-    actually answered, so the UI can label it honestly instead of always saying OSM.
+    Source priority: Foursquare Places (genuinely free up to 500 calls/month, no
+    subscription; springfield/foursquare.py) -> Yelp Fusion (dormant unless a paid
+    YELP_API_KEY is ever configured — Yelp's free self-serve tier was discontinued;
+    springfield/yelp.py) -> OpenStreetMap Overpass (free, no key, but volunteer-mapped and
+    often sparse for small multi-tenant buildings; springfield/businesses.py). Each fallback
+    only fires when the one before it is unconfigured or its call itself fails; a call that
+    SUCCEEDS with zero results is trusted as real information (that source found genuinely
+    nothing nearby), not treated as a failure to fall back from. The returned dict's "source"
+    field tells the caller which one actually answered, so the UI can label it honestly
+    instead of assuming.
 
     Classification of "on this parcel" vs. "merely nearby" uses the assemblage's REAL polygon
     shape when available (point-in-polygon, not just a fixed-radius circle from the centroid)
@@ -747,11 +750,19 @@ def businesses_at(apn, lat, lon, land_sqft, deadline=None):
 
     res, source = None, None
     try:
-        yelp_res = find_businesses_yelp(lat, lon, radius=radius)
-        if yelp_res is not None:      # None = unconfigured/failed; [] = genuinely nothing nearby
-            res, source = yelp_res, "yelp"
+        fsq_res = find_businesses_foursquare(lat, lon, radius=radius)
+        if fsq_res is not None:      # None = unconfigured/failed; [] = genuinely nothing nearby
+            res, source = fsq_res, "foursquare"
     except Exception as e:
-        print(f"  [businesses-yelp {apn}] failed: {e}")
+        print(f"  [businesses-foursquare {apn}] failed: {e}")
+
+    if res is None:
+        try:
+            yelp_res = find_businesses_yelp(lat, lon, radius=radius)
+            if yelp_res is not None:
+                res, source = yelp_res, "yelp"
+        except Exception as e:
+            print(f"  [businesses-yelp {apn}] failed: {e}")
 
     if res is None:
         try:
@@ -1496,21 +1507,34 @@ async function run(){
   if(d.extra_params) loadExtras(d.extra_params, gen);  // fire-and-forget, background, never blocks
 }
 
+// per-source copy for the Businesses Operating Here card — keeps the honesty caveats
+// specific to whichever source actually answered (see businesses_at()'s source priority:
+// Foursquare -> Yelp -> OpenStreetMap) instead of always assuming one.
+const BIZ_SOURCE_LABELS={
+  foursquare:{label:"live from Foursquare", verb:"listed",
+    found:'<b>Businesses listed at this location</b> on Foursquare &mdash; kept current by the businesses themselves (open/closed status tracked), meaningfully more reliable than volunteer-mapped data. Still worth a quick verify for anything time-sensitive.',
+    empty:'No businesses are listed at or near this parcel on Foursquare &mdash; likely a residential property, vacant lot, or a business too new/small to be listed yet. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.'},
+  yelp:{label:"live from Yelp", verb:"listed",
+    found:'<b>Businesses listed at this location</b> on Yelp &mdash; kept current by the businesses themselves (open/closed status, category), meaningfully more reliable than volunteer-mapped data. Still worth a quick verify for anything time-sensitive.',
+    empty:'No businesses are listed at or near this parcel on Yelp &mdash; likely a residential property, vacant lot, or a business too new/small to be listed yet. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.'},
+  osm:{label:"live from OpenStreetMap", verb:"mapped",
+    found:'<b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.',
+    empty:'No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>.'},
+};
 function renderExtraCards(bizResult,st){
   let h='';
-  // bizResult is {source:"yelp"|"osm", items:[...]} from the server, or null on failure —
-  // source tells us which one actually answered so the label/caveats are honest either way.
+  // bizResult is {source:"foursquare"|"yelp"|"osm", items:[...]} from the server, or null
+  // on failure — source tells us which one actually answered so every caveat below matches
+  // reality instead of assuming a fixed source.
   const biz = bizResult ? bizResult.items : null;
-  const source = bizResult ? bizResult.source : null;
-  const isYelp = source==="yelp";
-  const srcLabel = isYelp ? "live from Yelp" : "live from OpenStreetMap";
+  const meta = BIZ_SOURCE_LABELS[bizResult ? bizResult.source : "osm"] || BIZ_SOURCE_LABELS.osm;
   // ALWAYS render this section, for every address. An empty result is information too —
   // silently hiding the card just looks broken.
-  h+='<div class="card"><h3 class="sec">Businesses Operating Here <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; '+srcLabel+'</span></h3>';
+  h+='<div class="card"><h3 class="sec">Businesses Operating Here <span style="font-size:11px;color:var(--slate);font-weight:600">&bull; '+meta.label+'</span></h3>';
   if(biz&&biz.length){
     // the server flags results that only turned up after widening the search (OSM path) or
-    // fell outside the real parcel boundary (either source) — those are NEAR the parcel,
-    // not on it. Never claim a neighbour is a tenant.
+    // fell outside the real parcel boundary (any source) — those are NEAR the parcel, not
+    // on it. Never claim a neighbour is a tenant.
     const onParcel=biz.filter(x=>!x.widened);
     const shown=onParcel.length?onParcel:biz;
     h+='<div class="bizwrap">';
@@ -1524,20 +1548,13 @@ function renderExtraCards(bizResult,st){
       h+='<div class="biz"><b>'+esc(x.name)+'</b><span>'+esc(sub+dist)+'</span></div>';
     });
     h+='</div>';
-    if(onParcel.length){
-      h+= isYelp
-        ? '<div class="muted"><b>Businesses listed at this location</b> on Yelp &mdash; kept current by the businesses themselves (open/closed status, category), meaningfully more reliable than volunteer-mapped data. Still worth a quick verify for anything time-sensitive.</div>'
-        : '<div class="muted"><b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.</div>';
-    } else {
-      h+= '<div class="muted"><b>Nothing is '+(isYelp?"listed":"mapped")+' on this parcel itself</b> &mdash; these are the nearest '+(isYelp?"Yelp-listed":"mapped")+' businesses (see distances).'
-        +(isYelp?'':' OpenStreetMap is volunteer-mapped, so smaller tenants are often missing.')+'</div>';
-    }
+    h+= onParcel.length
+      ? '<div class="muted">'+meta.found+'</div>'
+      : '<div class="muted"><b>Nothing is '+meta.verb+' on this parcel itself</b> &mdash; these are the nearest '+meta.verb+' businesses (see distances).</div>';
   } else if(biz){   // reached the source, genuinely nothing nearby
-    h+= isYelp
-      ? '<div class="note">No businesses are listed at or near this parcel on Yelp &mdash; likely a residential property, vacant lot, or a business too new/small to be listed yet. This is a <b>coverage gap, not confirmed evidence the property is vacant</b>.</div>'
-      : '<div class="note">No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>.</div>';
+    h+='<div class="note">'+meta.empty+'</div>';
   } else {          // null = the lookup failed / timed out
-    h+='<div class="note">Couldn&rsquo;t reach '+(isYelp?"Yelp":"OpenStreetMap")+' just now &mdash; try the search again in a moment. This is a <b>lookup failure, not a finding</b>.</div>';
+    h+='<div class="note">Couldn&rsquo;t reach the business-lookup source just now &mdash; try the search again in a moment. This is a <b>lookup failure, not a finding</b>.</div>';
   }
   h+='</div>';
   if(st&&st.footprint_sqft){
