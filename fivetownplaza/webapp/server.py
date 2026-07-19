@@ -1521,7 +1521,7 @@ const BIZ_SOURCE_LABELS={
     found:'<b>Businesses mapped at this location</b> in OpenStreetMap &mdash; the store brands the assessor&rsquo;s use-code doesn&rsquo;t name. OSM is volunteer-maintained, so a name can lag a closure/rebrand: treat these as mapped occupants, <b>not necessarily current operators</b>, and verify before relying on any one.',
     empty:'No businesses are mapped at or near this parcel in OpenStreetMap. OSM is volunteer-mapped, so smaller tenants are frequently absent &mdash; this is a <b>coverage gap, not evidence the property is vacant</b>.'},
 };
-function renderExtraCards(bizResult,st){
+function renderExtraCards(bizResult,st,failReason){
   let h='';
   // bizResult is {source:"foursquare"|"yelp"|"osm", items:[...]} from the server, or null
   // on failure — source tells us which one actually answered so every caveat below matches
@@ -1554,7 +1554,8 @@ function renderExtraCards(bizResult,st){
   } else if(biz){   // reached the source, genuinely nothing nearby
     h+='<div class="note">'+meta.empty+'</div>';
   } else {          // null = the lookup failed / timed out
-    h+='<div class="note">Couldn&rsquo;t reach the business-lookup source just now &mdash; try the search again in a moment. This is a <b>lookup failure, not a finding</b>.</div>';
+    h+='<div class="note">Couldn&rsquo;t reach the business-lookup source just now &mdash; try the search again in a moment. This is a <b>lookup failure, not a finding</b>.'
+      +(failReason?(' <span style="color:var(--faint)">(reason: '+esc(failReason)+')</span>'):'')+'</div>';
   }
   h+='</div>';
   if(st&&st.footprint_sqft){
@@ -1579,19 +1580,27 @@ async function loadExtras(p, gen){
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(), 14000);  // hard cap — generous since this is
                                                     // background-only and never blocks the UI
+  let reason=null;
   try{
     const qs=new URLSearchParams({apn:p.apn, lat:p.lat, lon:p.lon, land_sqft:p.land_sqft,
                                   building_sqft:p.building_sqft, stories:p.stories||""});
     const r=await fetch("/api/extra?"+qs.toString(), {signal:ctrl.signal});
+    if(!r.ok){ reason="HTTP "+r.status; throw new Error(reason); }   // e.g. a 5xx error page
     const d=await r.json();
     if(stale(gen)) return;                      // results belong to a previous address
     const cur=document.getElementById("extras");
     if(cur) cur.innerHTML=renderExtraCards(d.businesses,d.site);
+    return;
   }catch(e){
-    // Slow/unreachable third-party server (OpenStreetMap) — say so rather than vanish.
+    // classify WHY it failed so the on-page message says something real instead of a
+    // generic "couldn't reach it" every time — makes this diagnosable from a screenshot
+    // alone, without needing DevTools.
+    if(!reason) reason = e.name==="AbortError" ? "timed out after 14s"
+      : (e.message && /failed to fetch|network/i.test(e.message)) ? "network error: "+e.message
+      : (e.message || String(e));
     if(stale(gen)) return;
     const cur=document.getElementById("extras");
-    if(cur) cur.innerHTML=renderExtraCards(null,null);
+    if(cur) cur.innerHTML=renderExtraCards(null,null,reason);
   }finally{
     clearTimeout(timer);
   }
