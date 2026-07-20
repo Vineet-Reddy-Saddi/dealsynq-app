@@ -1375,6 +1375,12 @@ PAGE = r"""<!doctype html>
        font-size:13px;line-height:1.6;color:#63501F;margin-top:14px}
   .cite{background:var(--mist);border:1px solid var(--hairline);border-left:3px solid var(--strong);
        padding:10px 14px;border-radius:10px;font-size:11.5px;line-height:1.65;color:var(--slate);margin-top:16px}
+  /* small uniform per-card provenance line — every card gets one; the more detailed
+     .cite/.muted footnotes some cards already have say MORE than this, not less, so this
+     never replaces those, only fills cards that had no source line at all. */
+  .srcbox{margin-top:12px;padding-top:8px;border-top:1px dashed var(--hairline);
+       font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;font-weight:700;color:var(--faint)}
+  .srcbox b{color:var(--slate);text-transform:none;letter-spacing:0;font-weight:600}
   a.src{color:var(--blue);font-size:12px;font-weight:600;text-decoration:none}
   a.src:hover{text-decoration:underline;text-decoration-color:var(--gold2)}
 
@@ -1730,6 +1736,7 @@ function render(d){
       +'&ldquo;'+esc(gc.query)+'&rdquo; was located via OpenStreetMap geocoding (resolved to &ldquo;'+esc(gc.display_name)+'&rdquo;), '
       +'not matched directly against the assessor&rsquo;s address or owner records; '+howNote+'.</div>';
   }
+  h+=srcbox(deep?"MCAP internal deep-profile research (see Data Confidence below)":"Springfield Assessor &mdash; city ArcGIS parcel system");
   h+='</div>';
 
   // ---- Businesses operating here + Building Footprint (OSM) ----
@@ -1772,19 +1779,20 @@ function render(d){
     if(syst.length) h+=kv("Building systems",syst.join(" &bull; "));
     if(e.assessment&&e.assessment.total){const a=e.assessment;h+=kv("Assessed value","Total "+money(a.total)+(a.land&&a.building?(" &nbsp;(land "+money(a.land)+" + bldg "+money(a.building)+")"):""));}
     if(e.value_flag) h+=kv("Valuation method",esc(e.value_flag));
+    h+=srcbox("Springfield Assessor &mdash; live record card lookup");
     h+='</div></div>';
 
     // sale history
     if(e.sales&&e.sales.length){
       h+='<div class="card"><h3 class="sec">Sale History</h3><table><tr><th>Date</th><th class="num">Price</th><th>Buyer</th></tr>';
       e.sales.forEach(s=>{h+='<tr><td>'+s.date+'</td><td class="num">'+(s.price?money(s.price):"&mdash;")+'</td><td>'+esc(titlecase(s.grantee||""))+'</td></tr>';});
-      h+='</table></div>';
+      h+='</table>'+srcbox("Springfield Assessor &mdash; record card sale history")+'</div>';
     }
     // permits
     if(e.permits&&e.permits.length){
       h+='<div class="card"><h3 class="sec">Permit Activity ('+e.permits.length+' recent)</h3><table><tr><th>Date</th><th>Permit #</th><th class="num">Value</th><th>Purpose</th></tr>';
       e.permits.forEach(p=>{h+='<tr><td>'+p.date+'</td><td>'+esc(p.number||"")+'</td><td class="num">'+(p.price?money(p.price):"&mdash;")+'</td><td>'+esc(p.purpose||"")+'</td></tr>';});
-      h+='</table></div>';
+      h+='</table>'+srcbox("Springfield Building Department &mdash; record card permit history")+'</div>';
     }
   } else if(!deep){
     h+='<div class="card note">Parcel + owner + assemblage resolved live. Record-card detail couldn&rsquo;t be fetched right now (the assessor site may be rate-limiting) &mdash; try again in a moment.</div>';
@@ -1815,6 +1823,7 @@ function render(d){
   if(d.owner_other_parcels>0){
     h+='<div class="note" style="margin-top:12px"><b>'+esc(titlecase(d.owner))+'</b> separately owns <b>'+d.owner_other_parcels+'</b> other parcel'+(d.owner_other_parcels>1?'s':'')+' elsewhere in Springfield ('+d.owner_total_parcels+' total). Those are <b>different properties</b> &mdash; not part of this assemblage &mdash; because they aren&rsquo;t contiguous with it.</div>';
   }
+  h+=srcbox("Springfield Assessor parcel geometry, grouped by our own adjacency clustering");
   h+='</div>';
 
   // deep: transactions + tenants + confidence
@@ -1825,13 +1834,14 @@ function render(d){
     h+=kv("Structure",esc(tx.structure||""));
     h+=kv("Mortgage",'<b style="color:var(--verified)">None recorded</b> &mdash; all-cash acquisition');
     h+=kv("Est. annual tax",money(deep.tax.estimated_annual_tax)+" (FY2026 commercial rate)");
+    h+=srcbox("Registry of Deeds transaction record + Springfield FY2026 commercial tax rate (deep profile)");
     h+='</div></div>';
 
     const te=deep.tenants;
     h+='<div class="card"><h3 class="sec">Tenants &mdash; '+te.space_count+' spaces &bull; '+te.occupancy_rate_by_sqft+'% occupied</h3><table><tr><th>Tenant</th><th class="num">SF</th><th>Status</th><th>Public</th></tr>';
     te.roster.forEach(x=>{const pub=x.ticker||"";const col=x.status=="occupied"?"var(--verified)":"var(--est)";
       h+='<tr><td>'+esc(x.tenant_name)+'</td><td class="num">'+x.sqft.toLocaleString()+'</td><td style="color:'+col+';font-weight:700">'+titlecase(x.status)+'</td><td style="color:var(--slate);font-size:12px">'+esc(pub)+'</td></tr>';});
-    h+='</table></div>';
+    h+='</table>'+srcbox("Manually researched leasing roster (deep profile, not live-refreshed)")+'</div>';
 
     const cs=deep.confidence_summary;
     h+='<div class="card"><h3 class="sec">Data Confidence</h3><div class="tiers">';
@@ -1923,6 +1933,7 @@ function renderOwnership(d){
   h+='</div>';
   if(d.owner_mailing && !/\bMA\b|MASSACHUSETTS/i.test(d.owner_mailing) && /[A-Z]{2}\s*\d{5}/.test(d.owner_mailing.toUpperCase()))
     h+='<div class="muted">Mailing address is <b>out of state</b> &mdash; an absentee / corporate owner (the entity behind the LLC).</div>';
+  h+=srcbox("Springfield Assessor owner-of-record");
   h+='</div>';
   return h;
 }
@@ -2333,6 +2344,9 @@ function drawSources(cat){
 }
 function kpi(n,l){return '<div class="kpi"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>'}
 function kv(k,v){return '<div class="k">'+k+'</div><div>'+v+'</div>'}
+// small uniform "Source: ..." line appended to every card — text is always a static
+// string we author (never raw user/API data), so it's written directly, no esc() needed.
+function srcbox(text){return '<div class="srcbox">Source &bull; <b>'+text+'</b></div>'}
 function tier(name,col,items){if(!items||!items.length)return"";
   return '<div class="row"><div class="tlabel" style="background:'+col+'">'+name+'</div><div>'+items.map(esc).join(" &bull; ")+'</div></div>';}
 function titlecase(s){return (s||"").toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());}
