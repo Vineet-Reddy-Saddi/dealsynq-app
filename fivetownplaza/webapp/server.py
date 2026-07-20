@@ -1165,9 +1165,9 @@ class Handler(BaseHTTPRequestHandler):
 PAGE = r"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#081C31">
+<meta name="theme-color" content="#0C1B38">
 <title>DealSynq — Property Intelligence</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230E2C49'/%3E%3Ctext x='50' y='70' font-size='62' font-family='Georgia,serif' font-weight='bold' fill='%23CFA24C' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
 <style>
   /* ==================================================================== */
@@ -1191,6 +1191,7 @@ PAGE = r"""<!doctype html>
     --sh-md:0 1px 2px rgba(11,37,64,.05),0 12px 32px rgba(11,37,64,.08);
     --sh-lg:0 2px 6px rgba(11,37,64,.12),0 24px 60px rgba(11,37,64,.22);
     /* type */
+    --wordmark:'Cormorant Garamond','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
     --serif:'Fraunces','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
     --mono:ui-monospace,'Cascadia Code','SF Mono',Menlo,Consolas,monospace;
@@ -1208,35 +1209,23 @@ PAGE = r"""<!doctype html>
 
   /* ------------------------------ hero ------------------------------- */
   .hero{position:relative;overflow:hidden;color:#fff;text-align:center;
-        padding:66px 20px 96px;
-        background:
-          radial-gradient(1050px 460px at 50% -190px,rgba(207,164,82,.26),transparent 62%),
-          radial-gradient(760px 460px at 8% 4%,rgba(37,99,160,.30),transparent 60%),
-          radial-gradient(760px 480px at 96% 14%,rgba(28,78,121,.42),transparent 62%),
-          linear-gradient(176deg,#081C31 0%,#0B2540 52%,#143A5E 100%)}
+        padding:66px 20px 96px;background:#0C1B38}
   .hero::before{content:"";position:absolute;inset:0;pointer-events:none;
-        background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
-                         linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
-        background-size:46px 46px;
-        -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.8),transparent 85%);
-        mask-image:linear-gradient(180deg,rgba(0,0,0,.8),transparent 85%)}
+        background:radial-gradient(ellipse at 50% -20%,rgba(40,75,125,.18),transparent 58%)}
   .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
         background:linear-gradient(90deg,transparent 8%,rgba(207,164,82,.85) 50%,transparent 92%)}
   .hero>*{position:relative}
-  /* Wordmark lockup — big gold "DealSynq" with a metallic top-to-bottom gradient, plus the
-     line-dot-line + tracked tagline beneath it, sitting above the h1 headline. */
-  .hero .wordmark{font-family:var(--serif);font-weight:600;font-size:56px;letter-spacing:.05em;
-        margin:0 0 18px;line-height:1;
-        background:linear-gradient(180deg,var(--gold3) 0%,var(--gold2) 48%,var(--gold) 100%);
-        -webkit-background-clip:text;background-clip:text;color:transparent;
-        filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
-  .hero .wordmark-tag{display:flex;flex-direction:column;align-items:center;gap:9px;margin:0 0 26px}
-  .hero .wordmark-tag .rule-row{display:flex;align-items:center;gap:10px}
-  .hero .wordmark-tag .rule{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold2))}
-  .hero .wordmark-tag .rule.r{background:linear-gradient(90deg,var(--gold2),transparent)}
+  /* Restrained editorial wordmark matching the approved brand direction. */
+  .hero .wordmark{font-family:var(--wordmark);font-weight:600;font-size:48px;letter-spacing:.16em;
+        text-indent:.16em;margin:0 0 12px;line-height:.92;color:#fff;
+        text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,.18)}
+  .hero .wordmark-tag{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 28px}
+  .hero .wordmark-tag .rule-row{display:flex;align-items:center;gap:5px}
+  .hero .wordmark-tag .rule{width:48px;height:1px;background:var(--gold2)}
+  .hero .wordmark-tag .rule.r{background:var(--gold2)}
   .hero .wordmark-tag .dot{width:5px;height:5px;border-radius:50%;background:var(--gold2);flex:none}
-  .hero .wordmark-tag .label{font-size:11px;letter-spacing:.34em;text-transform:uppercase;
-        color:var(--gold2);text-indent:.34em}
+  .hero .wordmark-tag .label{font-size:10px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;
+        color:#E2B329;text-indent:.42em}
   .hero h1{font-family:var(--serif);font-weight:550;font-size:46px;line-height:1.08;
         letter-spacing:-.01em;margin:18px auto 12px;max-width:700px;color:#F8FAFC;text-wrap:balance}
   .hero h1 em{font-style:italic;font-weight:480;color:var(--gold3)}
@@ -1464,16 +1453,16 @@ PAGE = r"""<!doctype html>
   /* ------------------------------ footer ------------------------------ */
   .foot{max-width:1020px;margin:0 auto;padding:16px 22px 54px;color:var(--faint);
        font-size:11.5px;text-align:center;line-height:1.8}
-  .foot .brand{font-family:var(--serif);font-weight:700;color:var(--navy);
-       letter-spacing:.14em;font-size:13px}
+  .foot .brand{font-family:var(--wordmark);font-weight:600;color:var(--navy);
+       letter-spacing:.18em;font-size:14px}
   .foot a{color:var(--slate)}
   .foot .dot{margin:0 7px;opacity:.45;color:var(--gold)}
 
   /* ------------------------------ mobile ------------------------------ */
   @media(max-width:680px){
     .hero{padding:44px 16px 70px}
-    .hero .wordmark{font-size:36px}
-    .hero .wordmark-tag .rule{width:40px}
+    .hero .wordmark{font-size:38px;letter-spacing:.14em;text-indent:.14em}
+    .hero .wordmark-tag .rule{width:42px}
     .hero h1{font-size:30px}
     .hero p{font-size:14px}
     .searchwrap{flex-direction:column}
@@ -1523,7 +1512,7 @@ PAGE = r"""<!doctype html>
   .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style></head><body>
 <header class="hero">
-  <div class="wordmark">DealSynq</div>
+  <div class="wordmark" aria-label="DealSynq">DEALSYNQ</div>
   <div class="wordmark-tag">
     <div class="rule-row"><span class="rule l"></span><span class="dot"></span><span class="rule r"></span></div>
     <div class="label">Property Intelligence</div>
