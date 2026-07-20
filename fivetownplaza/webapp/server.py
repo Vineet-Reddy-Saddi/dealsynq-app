@@ -1223,11 +1223,20 @@ PAGE = r"""<!doctype html>
   .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
         background:linear-gradient(90deg,transparent 8%,rgba(207,164,82,.85) 50%,transparent 92%)}
   .hero>*{position:relative}
-  .hero .kick{display:inline-flex;align-items:center;gap:12px;color:var(--gold2);
-        font-weight:700;font-size:11px;letter-spacing:.38em;text-transform:uppercase;text-indent:.38em}
-  .hero .kick::before,.hero .kick::after{content:"";width:26px;height:1px;
-        background:linear-gradient(90deg,transparent,rgba(207,164,82,.75));flex:none}
-  .hero .kick::after{background:linear-gradient(90deg,rgba(207,164,82,.75),transparent)}
+  /* Wordmark lockup — big gold "DealSynq" with a metallic top-to-bottom gradient, plus the
+     line-dot-line + tracked tagline beneath it, sitting above the h1 headline. */
+  .hero .wordmark{font-family:var(--serif);font-weight:600;font-size:56px;letter-spacing:.05em;
+        margin:0 0 18px;line-height:1;
+        background:linear-gradient(180deg,var(--gold3) 0%,var(--gold2) 48%,var(--gold) 100%);
+        -webkit-background-clip:text;background-clip:text;color:transparent;
+        filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+  .hero .wordmark-tag{display:flex;flex-direction:column;align-items:center;gap:9px;margin:0 0 26px}
+  .hero .wordmark-tag .rule-row{display:flex;align-items:center;gap:10px}
+  .hero .wordmark-tag .rule{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold2))}
+  .hero .wordmark-tag .rule.r{background:linear-gradient(90deg,var(--gold2),transparent)}
+  .hero .wordmark-tag .dot{width:5px;height:5px;border-radius:50%;background:var(--gold2);flex:none}
+  .hero .wordmark-tag .label{font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+        color:var(--gold2);text-indent:.34em}
   .hero h1{font-family:var(--serif);font-weight:550;font-size:46px;line-height:1.08;
         letter-spacing:-.01em;margin:18px auto 12px;max-width:700px;color:#F8FAFC;text-wrap:balance}
   .hero h1 em{font-style:italic;font-weight:480;color:var(--gold3)}
@@ -1463,8 +1472,8 @@ PAGE = r"""<!doctype html>
   /* ------------------------------ mobile ------------------------------ */
   @media(max-width:680px){
     .hero{padding:44px 16px 70px}
-    .hero .kick{font-size:10px;letter-spacing:.3em;text-indent:.3em}
-    .hero .kick::before,.hero .kick::after{display:none}
+    .hero .wordmark{font-size:36px}
+    .hero .wordmark-tag .rule{width:40px}
     .hero h1{font-size:30px}
     .hero p{font-size:14px}
     .searchwrap{flex-direction:column}
@@ -1514,7 +1523,11 @@ PAGE = r"""<!doctype html>
   .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style></head><body>
 <header class="hero">
-  <div class="kick">DealSynq &bull; Property Intelligence</div>
+  <div class="wordmark">DealSynq</div>
+  <div class="wordmark-tag">
+    <div class="rule-row"><span class="rule l"></span><span class="dot"></span><span class="rule r"></span></div>
+    <div class="label">Property Intelligence</div>
+  </div>
   <h1>Every public record on a property, in <em>one search</em>.</h1>
   <p>Ownership &amp; assemblage, zoning, recorded deeds &amp; mortgages, tenants, and a deep web sweep &mdash; assembled live from public sources.</p>
   <div class="searchwrap" role="search">
