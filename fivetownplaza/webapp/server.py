@@ -42,6 +42,7 @@ from springfield.zoning import lookup as zoning_lookup  # noqa: E402  ordinance 
 from deeds.hampden_browser import (fetch_records as deeds_fetch,  # noqa: E402
                                    summarize as deeds_summarize)  # registry of deeds (browser)
 from springfield.geocode import geocode  # noqa: E402  last-resort text->coords for landmarks
+from springfield.sec_edgar import match_public_reit  # noqa: E402  live public-REIT detection
 CSV_PATH = os.path.join(ROOT, "outputs", "springfield_ownportal.csv")
 PROFILE_PATH = os.path.join(ROOT, "fivetownplaza", "PROFILE.json")
 RESEARCH_PATH = os.path.join(ROOT, "fivetownplaza", "RESEARCH.json")
@@ -532,6 +533,23 @@ def _owner_posture(owner, parcel_count, deep):
         return ("Institutional owner", "institutional / mission-driven owner (health, education, "
                 "religious, nonprofit or insurer) — holds long-term, rarely an opportunistic seller",
                 "lowers", "strong", "entity name")
+    # Live public-REIT check (springfield/sec_edgar.py) — only attempted for corporate-
+    # shaped names (an individual's name could never be an SEC filer, so skip the network
+    # call entirely for those). Most commercial owners here are shell subsidiary LLCs whose
+    # name has no resemblance to their public parent (Five Town Plaza's own "Five Town
+    # Station LLC" -> Phillips Edison is exactly that case, only findable by hand), so this
+    # is expected to return no match for most owners — that's the honest, correct outcome,
+    # not a failure. "strong" not "verified": reserve "verified" for a human-confirmed
+    # parent-chain trace (like the deep profile's SEC Exhibit 21.1 citation); this is a
+    # same-name automated match, one notch more cautious.
+    if re.search(r"\bLLC\b|\bL L C\b|\bLP\b|\bLLP\b|LIMITED PARTNERSHIP|\bINC\b|CORP|COMPANY|"
+                 r"\bLTD\b|\bPLC\b|\bTRUST\b", name):
+        reit = match_public_reit(name)
+        if reit:
+            return ("Public REIT", f"owner name matches SEC-registered public REIT "
+                    f"{reit['name']} (ticker {reit['ticker']}), classified as a "
+                    f"{reit['sic_description']} — actively manages and prunes its portfolio",
+                    "raises", "strong", "SEC EDGAR (live name + industry-code match)")
     if re.search(r"\bLLC\b|\bL L C\b|\bLP\b|\bLLP\b|LIMITED PARTNERSHIP|\bINC\b|CORP|COMPANY", name):
         if parcel_count >= 6:
             return ("Active investor", f"investment entity (LLC/LP/Corp) holding {parcel_count} "
